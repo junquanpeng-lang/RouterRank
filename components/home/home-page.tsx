@@ -100,13 +100,59 @@ export function HomePage() {
         </div>
       </section>
 
-      <div className="mt-16 card p-6 max-w-2xl">
-        <div className="micro text-smoke mb-2">Migration in progress</div>
-        <p className="text-[13px] text-ash leading-relaxed">
-          The full ranking experience (filters, mobile cards, insight bar, ticker, insights rail)
-          is being ported from the original <code className="num text-bone">index.html</code> to
-          modular Next.js components. See <code className="num text-bone">MIGRATION.md</code>.
-        </p>
+      {/* Insights rail */}
+      <section className="mt-32 grid md:grid-cols-3 gap-px bg-ink-600">
+        <Insight
+          tag={t("insights.costTag")}
+          title={t("insights.costTitle")}
+          body={t("insights.costBody")}
+          stat={{ label: t("insights.costStat"), value: "14", tone: "amber" }}
+        />
+        <Insight
+          tag={t("insights.trustTag")}
+          title={t("insights.trustTitle")}
+          body={t("insights.trustBody")}
+          stat={{ label: t("insights.trustStat"), value: "6.2%", tone: "coral" }}
+        />
+        <Insight
+          tag={t("insights.payTag")}
+          title={t("insights.payTitle")}
+          body={t("insights.payBody")}
+          stat={{ label: t("insights.payStat"), value: "38%", tone: "brand" }}
+        />
+      </section>
+    </div>
+  );
+}
+
+function Insight({
+  tag,
+  title,
+  body,
+  stat,
+}: {
+  tag: string;
+  title: string;
+  body: string;
+  stat: { label: string; value: string; tone: "brand" | "amber" | "coral" };
+}) {
+  const toneColor = {
+    brand: "text-brand",
+    amber: "text-amber",
+    coral: "text-coral",
+  }[stat.tone];
+  return (
+    <div className="bg-ink p-5 sm:p-6 lg:p-8">
+      <div className="micro text-smoke">{tag}</div>
+      <h3 className="serif text-3xl tracking-editorial mt-3 leading-tight">
+        {title}
+      </h3>
+      <p className="mt-4 text-[14px] text-ash leading-relaxed">{body}</p>
+      <div className="mt-8 pt-5 border-t border-ink-600 flex items-baseline justify-between">
+        <span className="micro text-smoke">{stat.label}</span>
+        <span className={`serif text-4xl tracking-editorial ${toneColor}`}>
+          {stat.value}
+        </span>
       </div>
     </div>
   );

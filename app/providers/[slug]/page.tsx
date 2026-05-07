@@ -1,6 +1,6 @@
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { PageSkeleton } from "@/components/page-skeleton";
+import { ProviderDetail } from "@/components/provider/provider-detail";
 import { PROVIDERS } from "@/lib/data";
 import { notFound } from "next/navigation";
 
@@ -8,7 +8,7 @@ export function generateStaticParams() {
   return PROVIDERS.map((p) => ({ slug: p.slug }));
 }
 
-export default async function ProviderDetailPage({
+export default async function Page({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -21,11 +21,7 @@ export default async function ProviderDetailPage({
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <PageSkeleton
-          tag={`${p.type} · ${p.region}`}
-          title={p.name}
-          body={p.desc}
-        />
+        <ProviderDetail slug={slug} />
       </main>
       <Footer />
     </div>

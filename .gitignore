@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+.next/
+dist/
+build/
+*.tsbuildinfo
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Claude Code session
+.claude/
+
+# Env / secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Legacy Next.js scaffold (not used — index.html is the actual product)
+app/
+components/
+lib/
+prisma/
+tests/
+package.json
+package-lock.json
+tsconfig.json
+next.config.mjs
+next-env.d.ts
+vitest.config.ts
+
+# Internal spec docs
+项目.md

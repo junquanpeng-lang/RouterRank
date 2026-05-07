@@ -4,24 +4,60 @@
 
 GatewayBench is the framework behind RouterRank, a public ledger of AI router behavior for developers who refuse to take vendor claims at face value. Three tiers, nine dimensions, all anchored to published research.
 
-## Live preview
+## Stack
 
-This repository is a self-contained single-file React app (no build step). Open `index.html` in any browser, or deploy via GitHub Pages.
+- **Next.js 15** App Router + React 19
+- **TypeScript** (strict)
+- **Tailwind CSS 3.4** with CSS-variable theme tokens (light + dark)
+- **Mock data** for now — no backend yet (`lib/data.ts`)
+
+## Quick start
 
 ```bash
-# Local viewing
-open index.html
-# or
-python3 -m http.server 8000   # then visit http://localhost:8000
+npm install
+npm run dev          # http://localhost:3000
+npm run build        # production static build
+npm run typecheck    # strict TS check
 ```
 
-## What's inside
+## Project layout
 
-- **Ranking** — 8 routers across 6 frontier models, sorted by GatewayBench composite score (L1 Trust 40% · L3 Economics 40% · L2 Performance 20%).
-- **Run** — Send identical prompts through 1–5 routers in parallel, watch real-time output, compare on a 9-dimension scorecard.
-- **Validate** — Paste any chat-completions URL; we run a one-shot fingerprint probe (embedding distance, length distribution, tokenizer signature, precision estimate, refusal alignment).
-- **Provider detail** — Model fingerprint per (router × model), trust velocity over 30 days, recent incidents, supported model matrix.
-- **Wallet + x402** — Pay-per-request via Agentic Wallet (USDC on Base, ~3s settlement).
+```
+app/
+  layout.tsx              # root html + Providers wrapper
+  providers.tsx           # ThemeProvider + LangProvider + WalletProvider + ToastProvider
+  globals.css             # CSS variables + custom CSS classes (range-brand, kbd, shimmer, ...)
+  page.tsx                # Home (ranking)
+  run/page.tsx            # Run (skeleton — see MIGRATION.md)
+  validate/page.tsx       # Validate (skeleton)
+  wallet/page.tsx         # Wallet (skeleton)
+  docs/page.tsx           # Methodology (skeleton)
+  providers/[slug]/page.tsx  # Provider detail (skeleton, 8 static params)
+components/
+  header.tsx              # nav + theme/lang toggles + wallet button
+  footer.tsx              # 3-column footer + disclaimer
+  page-skeleton.tsx       # placeholder used by stub routes
+  home/home-page.tsx      # mini hero + ranking table (full version: see MIGRATION.md)
+lib/
+  types.ts                # Provider / SubScores / FingerprintResult / RunState etc.
+  data.ts                 # PROVIDERS, MODELS, HERO_STATS
+  scoring.ts              # computeL1/2/3/Overall, tier, costScore, latencyScore, subNote
+  fingerprint.ts          # fingerprint(), syntheticFingerprint(), trustHistory()
+  benchmarks.ts           # BENCHMARK_TEMPLATES, BENCHMARK_RESPONSES, getMockResponse
+  setup-prompt.ts         # generates the prompt for "Set up via Agent" flow
+  velocity-notes.ts       # per-provider 30-day commentary (en + zh)
+  utils.ts                # cx, fmtUSD, fmtPct, fmtMoney, strHash, copyToClipboard
+  i18n-dict.ts            # CN/EN dictionary (partial — see MIGRATION.md)
+  contexts/
+    lang.tsx              # useLang() — t() with {var} interpolation, localStorage persistence
+    theme.tsx             # useTheme() — dark/light, [data-theme] on <html>
+    wallet.tsx            # useWallet() — mock wallet state
+    toast.tsx             # useToast() — bottom-right toast stack
+```
+
+## Migration status
+
+This repo started as a single-file demo (`index.html`, ~6000 lines of inline JSX) and is being modularized into Next.js. Foundation, data layer, contexts, and the app shell are done. Per-page UI is being ported. **See [`MIGRATION.md`](./MIGRATION.md) for the full roadmap and what's pending.**
 
 ## GatewayBench rubric
 
@@ -31,7 +67,7 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 | L3 | Economics | 40% | How much does it actually cost? |
 | L2 | Performance | 20% | How fast and how stable? |
 
-Each tier decomposes into 3 sub-dimensions (9 total). See the in-app **Methodology** page for the full rubric, citations to RUT, CoIn, PALACE, Etalon, and others.
+Each tier decomposes into 3 sub-dimensions (9 total). Full rubric will live on `/docs` once that page is ported.
 
 ## Status
 

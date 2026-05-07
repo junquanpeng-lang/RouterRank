@@ -3,6 +3,7 @@ node_modules/
 
 # Build artifacts
 .next/
+out/
 dist/
 build/
 *.tsbuildinfo
@@ -19,21 +20,12 @@ build/
 # Env / secrets
 .env
 .env.*
+.env.local
 *.pem
 *.key
 
-# Legacy Next.js scaffold (not used — index.html is the actual product)
-app/
-components/
-lib/
-prisma/
-tests/
-package.json
-package-lock.json
-tsconfig.json
-next.config.mjs
-next-env.d.ts
-vitest.config.ts
-
 # Internal spec docs
 项目.md
+
+# Legacy single-file demo (kept locally as reference; the Next.js app is now the source of truth)
+index.html

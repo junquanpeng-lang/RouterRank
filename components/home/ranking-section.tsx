@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLang } from "@/lib/contexts/lang";
 import { MODELS, PROVIDERS } from "@/lib/data";
-import { cx, fmtMoney, fmtPct, fmtUSD, trustTone } from "@/lib/utils";
+import { cx, fmtMoney, fmtPct, trustTone } from "@/lib/utils";
 import { CostCell } from "@/components/ui/cost-cell";
 import { Dropdown } from "@/components/ui/dropdown";
 import { I } from "@/components/ui/icons";
 import { ProviderMark } from "@/components/ui/provider-mark";
 import { TierChip } from "@/components/ui/tier-chip";
+import { SetupPromptModal } from "@/components/wallet/setup-prompt-modal";
 import type { Provider } from "@/lib/types";
 
 export function RankingSection() {
@@ -24,6 +25,7 @@ export function RankingSection() {
   const [lastRefresh, setLastRefresh] = useState(() => Date.now() - 8 * 60 * 1000);
   const [refreshing, setRefreshing] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [setupTarget, setSetupTarget] = useState<Provider | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000);
@@ -201,7 +203,7 @@ export function RankingSection() {
           <div className="text-right">{t("ranking.thAction")}</div>
         </div>
         {filtered.map((p, i) => (
-          <RankingRow key={p.slug} p={p} rank={i + 1} />
+          <RankingRow key={p.slug} p={p} rank={i + 1} onSetup={setSetupTarget} />
         ))}
       </div>
 
@@ -256,11 +258,26 @@ export function RankingSection() {
           </button>
         </div>
       )}
+
+      {setupTarget && (
+        <SetupPromptModal
+          provider={setupTarget}
+          onClose={() => setSetupTarget(null)}
+        />
+      )}
     </section>
   );
 }
 
-function RankingRow({ p, rank }: { p: Provider; rank: number }) {
+function RankingRow({
+  p,
+  rank,
+  onSetup,
+}: {
+  p: Provider;
+  rank: number;
+  onSetup: (p: Provider) => void;
+}) {
   const { t } = useLang();
   return (
     <>
@@ -323,6 +340,13 @@ function RankingRow({ p, rank }: { p: Provider; rank: number }) {
           <span className="text-ash">{p.p95.toFixed(1)}s</span>
         </div>
         <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => onSetup(p)}
+            title={t("ranking.rowSetupTip")}
+            className="btn-ghost px-2 py-1.5 text-[12px] inline-flex items-center"
+          >
+            <I.bolt className="w-3.5 h-3.5" />
+          </button>
           <Link
             href={`/run?provider=${p.slug}`}
             className="btn-brand px-3 py-1.5 text-[12px] font-medium inline-flex items-center gap-1"
@@ -395,12 +419,18 @@ function RankingRow({ p, rank }: { p: Provider; rank: number }) {
             <div className="num text-[14px] text-bone">{fmtMoney(p.volume7d, 0)}</div>
           </div>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            onClick={() => onSetup(p)}
+            className="btn-ghost flex-1 text-center px-3 py-2 text-[12px] inline-flex items-center justify-center gap-1.5"
+          >
+            <I.bolt className="w-3.5 h-3.5" /> {t("ranking.rowSetUp")}
+          </button>
           <Link
             href={`/run?provider=${p.slug}`}
-            className="btn-brand block text-center px-3 py-2 text-[12px] font-medium"
+            className="btn-brand flex-1 text-center px-3 py-2 text-[12px] font-medium inline-flex items-center justify-center gap-1"
           >
-            {t("ranking.rowRun")}
+            {t("ranking.rowRun")} <I.arrow className="w-3 h-3" />
           </Link>
         </div>
       </div>

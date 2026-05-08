@@ -141,6 +141,13 @@ export const I18N: Record<Lang, any> = {
       heroTitleIt: "measure.",
       heroSubhead:
         "GatewayBench is the framework behind every score on the board. Three tiers, nine dimensions, all anchored to published research and re-runnable in the open. Below is what each axis means, how we collect it, and where we know we're still wrong.",
+      s00Tag: "§00 · Framework",
+      s00Title: "Three tiers · nine dimensions",
+      s00Body:
+        "We collapse provider behavior onto the three native questions a developer asks before integrating a router: ",
+      s00BodyEm: "is it real, what does it cost, how fast is it",
+      s00BodyPost:
+        ". Other dimensions (compliance, features, DX) sit downstream of these.",
       tierL1Label: "Trustworthiness",
       tierL3Label: "Economics",
       tierL2Label: "Performance",
@@ -148,6 +155,200 @@ export const I18N: Record<Lang, any> = {
       tierL3Q: "How much does it actually cost?",
       tierL2Q: "How fast and how stable?",
       formula: "Overall = 0.40 · L1 + 0.40 · L3 + 0.20 · L2",
+      s01Tag: "§01 · Rating bands",
+      s01Title: "AAA → C",
+      s01Body:
+        "Composite score buckets into five bands. Bands are calibrated annually as the panel grows; historical re-scoring is archived publicly under §08.",
+      band1Desc:
+        "Verified across all 9 dimensions. Production-ready for any workload.",
+      band2Desc:
+        "Strong overall, with 1–2 minor gaps that are publicly documented.",
+      band3Desc:
+        "Acceptable for most workloads. Read the L1.x flags before integrating.",
+      band4Desc:
+        "Use with caution. Dedicated mitigation needed for at least one tier.",
+      band5Desc: "Not recommended for production without specific override.",
+      labelWeight: "weight",
+      labelWeightWithin: "weight {w} within tier",
+      l1Intro:
+        "The market's existing horizontal benchmarks (Artificial Analysis, OpenRouter Exacto, LLM-Stats) systematically miss this question. A platform can be fast and cheap and still be silently serving a quantized variant — or a different model entirely. ",
+      l1IntroBold: "L1 is what makes GatewayBench distinct.",
+      l11Intro:
+        "Is the platform actually running the model it claims, or has it been swapped to a quantized, distilled, or completely different model?",
+      l11Method1Why:
+        "Compares token-rank distribution against the official API. Higher detection power than MMD/KS baselines for quantization, fine-tuning, or outright substitution.",
+      l11Method2Why:
+        "Single-token logprob deviation as an API-change signal. High precision with very few samples.",
+      l11Method3Why:
+        "Same prompt, temperature=0, fixed seed, multi-sample comparison vs the official API.",
+      l11Method4Why:
+        "Same request at different times of day, watching for backend drift or load-driven model swap.",
+      l11Score:
+        "Scoring: deviation from the canonical API distribution. Below threshold = full marks; significant deviation = penalized linearly. Re-run monthly.",
+      l12IntroPre:
+        "Reasoning models can hide tokens-of-thought from the chat surface while still billing for them. Token counts can be inflated. Three flavors of inflation matter: ",
+      l12IntroEm1: "token count",
+      l12IntroEm2: "API call",
+      l12IntroEm3: "model call",
+      l12IntroSep: ", ",
+      l12IntroAnd: ", and ",
+      l12IntroPost: ".",
+      l12Method1Why:
+        "Builds a verifiable hash tree from token embedding fingerprints to audit reported counts.",
+      l12Method2Why:
+        "GRPO-augmented module predicts reasoning token counts from prompt–answer pairs. Detects systematic over-billing.",
+      l12Method3Why:
+        "Categorizes inflation into token-count, API-call, and model-call types. Used as the L1.2 / L3.3 framing.",
+      l12Score:
+        "Scoring: ratio of reported tokens to ground-truth tokens at the official API. ±2% noise tolerance.",
+      l13Intro:
+        "Platforms increasingly claim prompt-caching at a discounted rate. Cache claims aren't always honest. We detect both directions:",
+      l13DirUp:
+        "↑ False-positive billing — charged cache-hit rate, but the request was fully recomputed.",
+      l13DirDown:
+        "↓ False-negative billing — request should have hit cache, but charged at full price.",
+      l13Method1Why:
+        "Same prompt repeated; cache hits should show markedly lower TTFT. Mismatch with usage fields = anomaly.",
+      l13Method2Why:
+        "Cross-check `usage.cached_tokens` / `prompt_cache_hit_tokens` against billing line items.",
+      l13Method3Why:
+        "Account A sends a unique prompt; account B sends the same prompt. A cross-account hit violates isolation.",
+      l13Method4Why:
+        "Vendor TTL claims (Anthropic 5 min / 1 h tiers) verified against actual release behavior.",
+      l13Score:
+        "Scoring: false-billing rate. Zero misreports = full marks. Each percentage point of misreporting deducts proportionally.",
+      l2Intro:
+        "Performance matters but it isn't the lever where vendors differentiate dishonestly. We weight it 20% — enough to penalize a slow router, not enough to let a fast-but-fake one win.",
+      l21IntroPre:
+        "Single averages are misleading; outliers dominate user experience. We report full distributions across ",
+      l21IntroBold: "P50 / P95 / P99",
+      l21IntroPost: " for four indicators.",
+      l21Method1Why:
+        "Request → first token. The number that defines chat / code-completion feel.",
+      l21Method2Why: "Steady-state token cadence. Defines streaming smoothness.",
+      l21Method3Why:
+        "Reasoning-model-specific: skips the chain-of-thought tokens, measures first user-visible answer token.",
+      l21Method4Why: "Total wall time. Matters for batch / non-streaming.",
+      l21Method5Why:
+        "Argues for distributions over averages. Methodology basis for our P50/P95/P99 reporting.",
+      l21Note:
+        "Multi-region: at minimum US-East, EU, Asia-Pacific. Multi-region disagreement triggers an L1.1 review.",
+      l22IntroPre:
+        "Throughput is more than just generation speed. We separate raw output-rate from ",
+      l22IntroBold: "goodput",
+      l22IntroPost: " — the rate that actually meets a workload's SLO.",
+      l22Method1Why: "Tokens-per-second on a single request.",
+      l22Method2Why: "Aggregate tokens-per-second under N-concurrent load.",
+      l22Method3Why:
+        "Throughput where individual requests still meet a fixed latency SLO.",
+      l22Method4Why: "Capacity ceiling before queueing dominates.",
+      l23Intro:
+        "Tail latency degrades non-linearly with context length. We benchmark at three sizes and watch for soft rate-limits or pricing surcharges that kick in only at larger contexts.",
+      l23Size1: "1 k input tokens — standard chat baseline.",
+      l23Size2: "10 k input tokens — RAG / mid-document.",
+      l23Size3: "100 k input tokens — long-document / agent context.",
+      l3Intro:
+        "Pricing is the easiest dimension to publish honestly and the easiest to obscure. We split it into list pricing, ratio vs the canonical official price, and everything that doesn't show up in the rate card.",
+      l31IntroPre: "Four token prices are reported separately. ",
+      l31IntroBold: "Never blended into a single number.",
+      l31Price1Pre: "Input",
+      l31Price1Post: " — $/1M tokens.",
+      l31Price2Pre: "Output",
+      l31Price2Post: " — $/1M tokens.",
+      l31Price3Pre: "Cache hit",
+      l31Price3Post: " — $/1M tokens.",
+      l31Price4Pre: "Cache write",
+      l31Price4Post:
+        " — $/1M tokens (Anthropic's 5 min vs 1 h TTL is a different price point and reported as such).",
+      l31Note:
+        "Blended price = 3 : 1 input-to-output ratio (Artificial Analysis convention) — used for quick comparison only, never for scoring.",
+      l32Intro:
+        "Price ratio = platform price / official-vendor price. The honest baseline depends on the platform's role:",
+      l32Base1Tag: "Aggregator router",
+      l32Base1Body: " baseline (5.5% router fee, OpenRouter convention)",
+      l32Base2Tag: "Gateway / proxy",
+      l32Base2Body: " baseline (passthrough)",
+      l32Base3Tag: "Direct-inference (OSS models)",
+      l32Base3Body: " price for the same model",
+      l32Base4Tag: "Self-host (LiteLLM, etc.)",
+      l32Base4Body: " with zero markup expected",
+      l32Note:
+        "Below baseline = discount; above baseline by > 5% with no documented reason = penalized.",
+      l33Intro: "What you actually pay vs what the rate card prints.",
+      l33Item1: "Failed-request billing — are 5xx and timeout calls charged?",
+      l33Item2: "Token-count inflation pass-through (cross-references L1.2).",
+      l33Item3: "Minimum top-up / monthly minimums.",
+      l33Item4: "Withdrawal / refund policy on credit balances.",
+      l33Item5: "FX margin and cross-border payment fees.",
+      l33Method1Why:
+        "Three-class inflation taxonomy applied as a hidden-cost detector.",
+      s04Title: "Sampling protocol",
+      s04Intro:
+        "Single-point measurements are too easily polluted by transient anomalies (deploy, GPU thermals, regional routing). Continuous sampling with a wide window is the only honest measure.",
+      s04WindowTag: "Window",
+      s04WindowSpan1: "72 h rolling P50",
+      s04WindowMid: " per (router × model) pair. Minimum ",
+      s04WindowSpan2: "7 days",
+      s04WindowPost: " of data before a provider is listed.",
+      s04CadenceTag: "Cadence",
+      s04CadencePre: "Dynamic API every ",
+      s04CadenceSpan1: "3 h",
+      s04CadenceMid1: ". Static / pricing audit every ",
+      s04CadenceSpan2: "30 d",
+      s04CadenceMid2: ". Deep L1.x audit every ",
+      s04CadenceSpan3: "30 d",
+      s04CadencePost: ".",
+      s04WorkloadsTag: "Workloads",
+      s04WorkloadsBody:
+        "1 k / 10 k / 100 k input tokens, plus a 10-concurrent stress run on the 1 k size.",
+      s04RegionsTag: "Regions",
+      s04RegionsBody:
+        "US-East, EU, Asia-Pacific minimum. Disagreement > 30% triggers an L1.1 review.",
+      s05Title: "Reproducibility",
+      s05Intro:
+        "Borrowed wholesale from the LLMRouterBench / RouterBench reproducibility standards. Anyone can clone the rig and verify our numbers — or argue with them.",
+      s05Item1: "Test scripts: open source under Apache 2.0 on GitHub.",
+      s05Item2: "Prompt set: published as a versioned manifest.",
+      s05Item3: "Raw data: CSV / Parquet, refreshed daily.",
+      s05Item4Pre: "Token counting: ",
+      s05Item4Mid: " with ",
+      s05Item4Post:
+        ", to avoid tokenizer-driven drift across providers.",
+      s05Item5: "Hardware: standardized client config documented per region.",
+      s05Method1Why:
+        "Methodology basis for the perf/cost/latency tradeoff axes and reproducibility commitments.",
+      s05Method2Why:
+        "Reproducibility standard adopted for prompt-set versioning and raw data exports.",
+      s06Title: "Conflicts of interest",
+      s06Item1: "All sponsors and commercial partners are disclosed publicly.",
+      s06Item2:
+        "Scoring is isolated from the commercial relationship — sponsorship does not move scores.",
+      s06Item3:
+        "Re-test requests and methodology challenges are accepted in writing.",
+      s06Item4: "Score corrections are archived and visible in change-log diffs.",
+      s07Title: "Known limitations & future work",
+      s07Intro: "The honest list of what we know we still get wrong.",
+      s07Item1Bold: "Use-case-aware weighting.",
+      s07Item1Body:
+        " The 40 / 40 / 20 split is fixed. Production users with strict latency SLAs may want L2 raised to 30%; batch users may want L3 emphasized. Adaptive weighting is on the roadmap.",
+      s07Item2Bold: "Cache TTL upstream pollution.",
+      s07Item2Body:
+        " Anthropic's server-side cache and a gateway's own cache layer aren't perfectly separable in single-shot probing. Borderline cases are conservatively attributed to the gateway, biasing L1.3 slightly negative.",
+      s07Item3Bold: "L1.2 / L3.3 overlap.",
+      s07Item3Body:
+        " Token-count inflation is currently scored in both L1.2 (as a behavioral violation) and L3.3 (as a hidden cost). The double-counting is intentional but worth flagging — review pending.",
+      s07Item4Bold: "Quality-under-load.",
+      s07Item4Body:
+        " A model can pass L1.1 model-authenticity at low load yet show subtle accuracy degradation at high concurrency (continuous batching, KV-cache compression, speculative decoding). We don't yet measure this. Open research.",
+      s07Item5Bold: "Forthcoming citations.",
+      s07Item5Body:
+        " Several of the cited papers (Logprob Tracking, IMMACULATE) are in submission as of this version. Final implementation details may shift as published versions land.",
+      s07Item6Bold: "Region coverage.",
+      s07Item6Body:
+        " US-East / EU / AP only. Africa / China / Middle East are roadmap.",
+      s07Item7Bold: "Operating cost transparency.",
+      s07Item7Body:
+        " Running the panel costs real money in API calls. We will publish monthly operating-cost totals once the rig stabilizes; this is missing today.",
       ctaBody:
         "Read the rubric end-to-end. Disagree with us in writing. The board exists to be argued with.",
       ctaButton: "Find a router",
@@ -175,10 +376,77 @@ export const I18N: Record<Lang, any> = {
       testAgainst: "Test against",
       validate: "Validate",
       newValidation: "New validation",
+      probePipeline: "Probe pipeline · {model}",
+      phProbe: "Probing endpoint",
+      phProbeDetail: "TLS handshake · auth shape · response headers",
+      phSample: "Sampling probe set",
+      phSampleDetail: "Sending 50 fixed prompts across categories",
+      phEmbed: "Embedding distance",
+      phEmbedDetail: "Cosine similarity vs canonical model output",
+      phLength: "Length distribution",
+      phLengthDetail: "Two-sample K-S test on output token length",
+      phTok: "Tokenizer signature",
+      phTokDetail: "Inferring BPE merges + leading-whitespace handling",
+      phPrec: "Precision estimate",
+      phPrecDetail: "Numeric-task accuracy delta vs FP16 baseline",
+      phRefusal: "Refusal alignment",
+      phRefusalDetail: "Safety probe — refusal-rate delta",
+      phScore: "Composite match score",
+      phScoreDetail: "Weighted aggregate (0–100)",
+      probeOk: "{n} prompts ok",
+      tokMatch: "✓ match",
+      tokMismatch: "✗ mismatch",
+      indexedRouter: "Indexed router",
+      firstSeen: "First-seen endpoint",
+      onTheBoard: "on the board",
+      singleProbe: "single probe",
       matchScore: "Match score",
       verified: "Verified",
       caution: "Caution",
       risky: "Risky",
+      samplesShort: "{n} samples",
+      unsupportedTag: "Unsupported · honest by omission",
+      unsupportedTitle: "{name} does not serve this model directly.",
+      fpEmbedDist: "Embedding distance",
+      fpEmbedHint:
+        "Cosine similarity of response embeddings vs the canonical model's distribution.",
+      fpLengthDist: "Length distribution",
+      fpLengthHint:
+        "K-S test on output token-length distribution against the canonical baseline.",
+      fpTokenizer: "Tokenizer signature",
+      fpTokenizerHint: "Inferred from raw character-level output structure.",
+      fpPrecision: "Believed precision",
+      fpPrecisionHint:
+        "Estimated from numeric-task accuracy delta vs FP16 baseline.",
+      fpRefusal: "Refusal alignment",
+      fpRefusalHint:
+        "Refusal-rate delta vs canonical model on a 30-prompt safety probe set.",
+      firstSeenNote:
+        "This URL is not on the board yet — what you see is a single-probe snapshot. For continuous-panel scoring, request indexing or come back after we've sampled 24 hours of traffic.",
+      indexedNote: "This endpoint matches an indexed router. ",
+      indexedLink: "View the full continuous-panel report →",
+      methodologyTag: "How this works",
+      methodologyTitlePre: "A single probe, not a",
+      methodologyTitleIt: "panel.",
+      methodologyP1:
+        "The leaderboard scores come from a continuously-running panel — thousands of samples per provider per day. This page runs ",
+      methodologyP1Em: "one shot",
+      methodologyP1Post:
+        " against the URL you paste. It is enough to flag obvious mismatches (tokenizer signature, quantization fingerprint, refusal divergence) but it cannot replace continuous sampling. Treat first-seen results as a strong directional signal, not a final verdict.",
+      methodologyP2Pre: "In GatewayBench terms, this single probe maps to ",
+      methodologyP2Em: "L1.1 Model Authenticity",
+      methodologyP2Post:
+        ". The other 8 sub-dimensions (billing transparency, cache fraud, latency tail, throughput, long-context degradation, list pricing, vs-official ratio, hidden cost) require continuous panel sampling to score reliably.",
+      canDetectTitle: "What we can detect in one probe",
+      canDetect1: "Tokenizer mismatch (silent fallback signal)",
+      canDetect2: "Q4 / Q8 quantization fingerprint",
+      canDetect3: "Refusal-rate divergence on a safety probe set",
+      canDetect4: "Embedding-distance outliers (< 0.7 vs canonical)",
+      needsTitle: "What needs continuous sampling",
+      needs1: "Pricing drift over time",
+      needs2: "p95 / p99 latency tail",
+      needs3: "Fallback transparency under load",
+      needs4: "Trust velocity (improving / degrading)",
     },
     wallet: {
       accountTag: "Account · Wallet",
@@ -440,7 +708,13 @@ export const I18N: Record<Lang, any> = {
       heroTitlePre: "我们如何",
       heroTitleIt: "度量。",
       heroSubhead:
-        "GatewayBench 是支撑榜单上每一个分数的框架。三个层级、九个维度,每一个都锚定到已发表的研究并可在公开环境下复跑。",
+        "GatewayBench 是支撑榜单上每一个分数的框架。三个层级、九个维度,每一个都锚定到已发表的研究并可在公开环境下复跑。下面是每个维度的含义、我们如何采集它,以及我们自知仍然欠缺的地方。",
+      s00Tag: "§00 · 框架",
+      s00Title: "三个层级 · 九个维度",
+      s00Body:
+        "我们把路由器的行为收敛到开发者在接入前真正会问的三个原生问题:",
+      s00BodyEm: "是不是真的、要花多少钱、有多快",
+      s00BodyPost: "。其它维度(合规、功能、DX)都属于这三个的下游。",
       tierL1Label: "可信度",
       tierL3Label: "经济性",
       tierL2Label: "性能",
@@ -448,6 +722,182 @@ export const I18N: Record<Lang, any> = {
       tierL3Q: "它实际花费多少?",
       tierL2Q: "有多快、有多稳?",
       formula: "综合分 = 0.40 · L1 + 0.40 · L3 + 0.20 · L2",
+      s01Tag: "§01 · 评级区间",
+      s01Title: "AAA → C",
+      s01Body:
+        "综合分映射为 5 档区间。我们每年随面板规模重新校准区间;历史 re-scoring 在 §08 公开归档。",
+      band1Desc: "在 9 个维度上均通过核验。可用于任意生产工作负载。",
+      band2Desc: "整体表现强,有 1–2 处轻微缺口已公开披露。",
+      band3Desc: "可用于多数工作负载。接入前请阅读 L1.x 标记。",
+      band4Desc: "谨慎使用。至少有一个层级需要专门缓解。",
+      band5Desc: "不建议在没有专门豁免的情况下用于生产。",
+      labelWeight: "权重",
+      labelWeightWithin: "该层级内权重 {w}",
+      l1Intro:
+        "市面上现有的横向评测(Artificial Analysis、OpenRouter Exacto、LLM-Stats)系统性地缺失了这个问题。一家平台可以又快又便宜,同时悄悄在跑一个量化版本——或者干脆是另一个模型。",
+      l1IntroBold: "L1 是 GatewayBench 与众不同的地方。",
+      l11Intro:
+        "平台是不是真的在跑它声称的模型,还是已经被替换为量化版、蒸馏版,甚至是完全不同的模型?",
+      l11Method1Why:
+        "把目标 endpoint 与官方 API 的 token 排名分布做一致性检验。对量化、微调、模型替换的检测功率显著优于 MMD/KS baseline。",
+      l11Method2Why:
+        "用单 token 的 logprob 偏离作为 API 变更信号。在极少样本下精度极高。",
+      l11Method3Why: "同 prompt + temperature=0 + 固定 seed,多次采样比对官方 API。",
+      l11Method4Why:
+        "不同时段重复同请求,监测后端漂移或负载触发的模型替换。",
+      l11Score:
+        "评分:相对官方 API 分布的偏差。低于阈值满分;显著偏差按线性扣分。每月复测。",
+      l12IntroPre:
+        "Reasoning 模型可以在不显示思考 token 的情况下仍按它们计费。Token 计数也可能被虚报。三类通胀值得关注:",
+      l12IntroEm1: "token count",
+      l12IntroEm2: "API call",
+      l12IntroEm3: "model call",
+      l12IntroSep: "、",
+      l12IntroAnd: "、",
+      l12IntroPost: "。",
+      l12Method1Why:
+        "基于 token embedding 指纹构造可验证的哈希树,审计上报的计数。",
+      l12Method2Why:
+        "用 GRPO 增强模块从 prompt-answer 对预测 reasoning token 数量。识别系统性超额计费。",
+      l12Method3Why:
+        "把通胀分类为 token 计数、API 调用、模型调用三种类型。L1.2 / L3.3 共用此分类。",
+      l12Score:
+        "评分:与官方 API ground-truth token 数的比值。±2% 噪声容差。",
+      l13Intro:
+        "平台越来越多地以折扣价宣称 prompt 缓存。但缓存声明不一定诚实。我们检测两个方向:",
+      l13DirUp:
+        "↑ 假阳性计费——按缓存命中价收费,但请求实际被完全重新计算。",
+      l13DirDown: "↓ 假阴性计费——本应命中缓存,却按全价收费。",
+      l13Method1Why:
+        "同 prompt 重复请求;缓存命中应表现为显著较低的 TTFT。与 usage 字段不一致 = 异常。",
+      l13Method2Why:
+        "把 `usage.cached_tokens` / `prompt_cache_hit_tokens` 字段与计费明细做交叉核对。",
+      l13Method3Why:
+        "A 账号发独特 prompt;B 账号发同 prompt。出现跨账号命中即违反隔离。",
+      l13Method4Why:
+        "把厂商声称的 TTL(Anthropic 5 分钟 / 1 小时 档)与实际释放行为对比。",
+      l13Score: "评分:错报率。零错报满分。每个百分点错报按比例扣分。",
+      l2Intro:
+        "性能很重要,但不是厂商主要不诚实的维度。我们给它 20%——足以惩罚慢路由器,但不足以让“快但虚假”的胜出。",
+      l21IntroPre:
+        "单一平均值会误导;离群值才主导用户体验。我们对 4 个指标全量上报 ",
+      l21IntroBold: "P50 / P95 / P99",
+      l21IntroPost: " 的完整分布。",
+      l21Method1Why: "请求 → 首 token。决定聊天 / 代码补全的体感。",
+      l21Method2Why: "稳态 token 节奏。决定流式输出的顺滑度。",
+      l21Method3Why:
+        "推理模型专属:跳过 chain-of-thought token,测量第一条用户可见答案 token。",
+      l21Method4Why: "总挂钟时间。对批量 / 非流式调用重要。",
+      l21Method5Why:
+        "主张用分布而非均值。本榜单 P50/P95/P99 上报方法的论据基础。",
+      l21Note: "多地域:至少美东、欧洲、亚太。多地域分歧会触发 L1.1 复审。",
+      l22IntroPre:
+        "吞吐不只是生成速度。我们把原始 output-rate 与 ",
+      l22IntroBold: "goodput",
+      l22IntroPost: " 分开——后者是真正满足工作负载 SLO 的吞吐。",
+      l22Method1Why: "单请求每秒 token 数。",
+      l22Method2Why: "N 路并发下的总 tokens/s。",
+      l22Method3Why: "单请求仍满足固定延迟 SLO 时的吞吐。",
+      l22Method4Why: "排队主导前的容量上限。",
+      l23Intro:
+        "尾部延迟会随上下文长度非线性恶化。我们在 3 个尺寸下做 benchmark,并监测仅在长上下文下触发的软限流或溢价。",
+      l23Size1: "1 k 输入 tokens — 标准聊天基线。",
+      l23Size2: "10 k 输入 tokens — RAG / 中等文档。",
+      l23Size3: "100 k 输入 tokens — 长文档 / agent 上下文。",
+      l3Intro:
+        "价格是最容易公开诚实、也最容易被遮掩的维度。我们把它拆成明面定价、相对官方价的比值,以及所有不在价格表上的费用。",
+      l31IntroPre: "4 类 token 价格分别上报。",
+      l31IntroBold: "严禁混合成单一数字。",
+      l31Price1Pre: "输入",
+      l31Price1Post: " — $/1M tokens。",
+      l31Price2Pre: "输出",
+      l31Price2Post: " — $/1M tokens。",
+      l31Price3Pre: "缓存命中",
+      l31Price3Post: " — $/1M tokens。",
+      l31Price4Pre: "缓存写入",
+      l31Price4Post:
+        " — $/1M tokens(Anthropic 的 5 分钟 vs 1 小时 TTL 价格不同,各自单独上报)。",
+      l31Note:
+        "混合价 = 输入:输出 3:1 (Artificial Analysis 惯例) — 仅用于快速对比,不用于评分。",
+      l32Intro: "价格比 = 平台价格 / 官方厂商价格。诚实的基准取决于平台的角色:",
+      l32Base1Tag: "聚合路由器",
+      l32Base1Body: " 基准(5.5% 路由费,OpenRouter 惯例)",
+      l32Base2Tag: "Gateway / 代理",
+      l32Base2Body: " 基准(透传)",
+      l32Base3Tag: "直推(开源模型)",
+      l32Base3Body: " 同模型价",
+      l32Base4Tag: "自部署(LiteLLM 等)",
+      l32Base4Body: ",预期零加价",
+      l32Note: "低于基准 = 折扣;高于基准 5% 且无公开理由 = 扣分。",
+      l33Intro: "你实际付的钱 vs 价格表上印的。",
+      l33Item1: "失败请求是否计费——5xx 与超时是否扣费?",
+      l33Item2: "Token 计数虚报的连带成本(关联 L1.2)。",
+      l33Item3: "最低充值 / 月度最低消费。",
+      l33Item4: "账户余额的提现 / 退款政策。",
+      l33Item5: "FX 外汇加成与跨境支付费用。",
+      l33Method1Why: "将三类通胀分类作为隐性成本检测器使用。",
+      s04Title: "采样协议",
+      s04Intro:
+        "单点测量极易被瞬时异常(发布、GPU 散热、地域路由)污染。只有以宽窗口持续采样才是诚实的度量。",
+      s04WindowTag: "窗口",
+      s04WindowSpan1: "72 小时滚动 P50",
+      s04WindowMid: ",按(路由器 × 模型)对配。需至少 ",
+      s04WindowSpan2: "7 天",
+      s04WindowPost: " 数据后路由器才会上榜。",
+      s04CadenceTag: "节奏",
+      s04CadencePre: "动态 API 每 ",
+      s04CadenceSpan1: "3 小时",
+      s04CadenceMid1: " 一次。静态 / 定价审计每 ",
+      s04CadenceSpan2: "30 天",
+      s04CadenceMid2: " 一次。L1.x 深度审计每 ",
+      s04CadenceSpan3: "30 天",
+      s04CadencePost: " 一次。",
+      s04WorkloadsTag: "工作负载",
+      s04WorkloadsBody:
+        "1 k / 10 k / 100 k 输入 tokens,加上 1 k 尺寸的 10 路并发压力测试。",
+      s04RegionsTag: "地域",
+      s04RegionsBody: "至少美东、欧洲、亚太。分歧 > 30% 触发 L1.1 复审。",
+      s05Title: "可复现性",
+      s05Intro:
+        "完整借鉴 LLMRouterBench / RouterBench 的可复现性标准。任何人都可以克隆我们的测试环境验证我们的数字——或与之对峙。",
+      s05Item1: "测试脚本:在 GitHub 上以 Apache 2.0 开源。",
+      s05Item2: "Prompt 集合:作为带版本号的 manifest 公开。",
+      s05Item3: "原始数据:CSV / Parquet,每日刷新。",
+      s05Item4Pre: "Token 计数:",
+      s05Item4Mid: " 配合 ",
+      s05Item4Post: ",避免不同路由器之间因 tokenizer 引入漂移。",
+      s05Item5: "硬件:按地域记录的标准化客户端配置。",
+      s05Method1Why:
+        "本榜单性能 / 成本 / 延迟权衡轴及可复现承诺的方法论基础。",
+      s05Method2Why:
+        "本榜单 prompt 集合版本化与原始数据导出所采用的可复现性标准。",
+      s06Title: "利益冲突",
+      s06Item1: "所有赞助方和商业伙伴均公开披露。",
+      s06Item2: "评分与商业关系隔离——赞助不会改动分数。",
+      s06Item3: "复测请求与方法论质询接受书面提交。",
+      s06Item4: "分数修正会在变更日志 diff 中归档可见。",
+      s07Title: "已知限制与未来工作",
+      s07Intro: "我们诚实地列出仍知道做错的部分。",
+      s07Item1Bold: "按场景加权。",
+      s07Item1Body:
+        " 当前 40 / 40 / 20 是固定的。生产用户若有严格延迟 SLA 可能希望 L2 提到 30%;批处理用户可能希望加重 L3。自适应加权在路线图上。",
+      s07Item2Bold: "缓存 TTL 上游污染。",
+      s07Item2Body:
+        " Anthropic 服务端缓存与 gateway 自身的缓存层在单次探测中无法完美分离。边缘案例保守归因于 gateway,使 L1.3 略偏负。",
+      s07Item3Bold: "L1.2 / L3.3 重叠。",
+      s07Item3Body:
+        " Token 计数虚报当前在 L1.2(行为违规)与 L3.3(隐性成本)中均计分。这种双重计分是有意为之,但值得标记——后续审视。",
+      s07Item4Bold: "负载下的质量。",
+      s07Item4Body:
+        " 一个模型可以在低负载下通过 L1.1 模型真实性,却在高并发下出现微妙的准确率退化(continuous batching、KV-cache 压缩、speculative decoding)。我们尚未度量。开放研究中。",
+      s07Item5Bold: "即将刊发的引用。",
+      s07Item5Body:
+        " 部分被引论文(Logprob Tracking、IMMACULATE)在本版本时仍处于投稿阶段。最终实现细节会随定稿而调整。",
+      s07Item6Bold: "地域覆盖。",
+      s07Item6Body: " 仅覆盖美东 / 欧洲 / 亚太。非洲 / 中国 / 中东在路线图。",
+      s07Item7Bold: "运营成本透明度。",
+      s07Item7Body:
+        " 运行该面板每月都有可观的 API 调用成本。等环境稳定后我们会公布月度运营成本总额——目前尚未公布。",
       ctaBody: "把整套规则读完。如有异议请书面回应。这个榜单的存在就是为了被反驳。",
       ctaButton: "找一家路由器",
     },
@@ -474,10 +924,73 @@ export const I18N: Record<Lang, any> = {
       testAgainst: "对比模型",
       validate: "验证",
       newValidation: "新建验证",
+      probePipeline: "探测流水线 · {model}",
+      phProbe: "探测端点",
+      phProbeDetail: "TLS 握手 · 鉴权形态 · 响应头",
+      phSample: "采样 probe 集合",
+      phSampleDetail: "跨类别发送 50 条固定 prompt",
+      phEmbed: "嵌入距离",
+      phEmbedDetail: "与原版模型输出的余弦相似度",
+      phLength: "输出长度分布",
+      phLengthDetail: "对输出 token 长度做双样本 K-S 检验",
+      phTok: "Tokenizer 签名",
+      phTokDetail: "推断 BPE 合并和前导空格处理",
+      phPrec: "精度估计",
+      phPrecDetail: "相对 FP16 基线的数值任务准确率差",
+      phRefusal: "拒答对齐",
+      phRefusalDetail: "安全 probe—拒答率差",
+      phScore: "综合匹配度",
+      phScoreDetail: "加权聚合 (0–100)",
+      probeOk: "{n} 条 prompt 通过",
+      tokMatch: "✓ 匹配",
+      tokMismatch: "✗ 不匹配",
+      indexedRouter: "已索引的路由器",
+      firstSeen: "首次见到的端点",
+      onTheBoard: "已上榜",
+      singleProbe: "单次探测",
       matchScore: "匹配度",
       verified: "已核验",
       caution: "需关注",
       risky: "风险",
+      samplesShort: "{n} 次采样",
+      unsupportedTag: "不支持 · 不掩饰",
+      unsupportedTitle: "{name} 不直接提供该模型。",
+      fpEmbedDist: "嵌入距离",
+      fpEmbedHint: "响应嵌入与原版模型分布之间的余弦相似度。",
+      fpLengthDist: "输出长度分布",
+      fpLengthHint: "对输出 token 长度分布与原版基线进行的 K-S 检验。",
+      fpTokenizer: "Tokenizer 签名",
+      fpTokenizerHint: "从字符级输出结构推断。",
+      fpPrecision: "推断精度",
+      fpPrecisionHint: "从数值任务准确率差相对 FP16 基线估计。",
+      fpRefusal: "拒答对齐",
+      fpRefusalHint: "与原版模型在 30 条安全 probe 集合上的拒答率差。",
+      firstSeenNote:
+        "该 URL 尚未上榜——你看到的是单次探测的快照。如需连续面板评分,请申请索引,或在我们采样满 24 小时后再回来查看。",
+      indexedNote: "该端点匹配一家已索引的路由器。",
+      indexedLink: "查看完整连续面板报告 →",
+      methodologyTag: "原理说明",
+      methodologyTitlePre: "一次探测,而非一组",
+      methodologyTitleIt: "面板。",
+      methodologyP1:
+        "榜单上的分数来自持续运行的面板——每家路由器每天数千次采样。本页对你粘贴的 URL 进行 ",
+      methodologyP1Em: "一次",
+      methodologyP1Post:
+        " 探测,足以暴露明显的不匹配(tokenizer 签名、量化指纹、拒答偏差),但无法替代连续采样。把首次见到的结果当作一个强烈的方向性信号,而不是最终判定。",
+      methodologyP2Pre: "在 GatewayBench 框架下,这次单次探测对应 ",
+      methodologyP2Em: "L1.1 模型真实性",
+      methodologyP2Post:
+        "。其余 8 个子维度(计费透明度、缓存欺诈、延迟尾部、吞吐、长上下文衰减、明面定价、vs 官方价、隐性成本)需要连续面板采样才能可靠评分。",
+      canDetectTitle: "一次探测能发现的",
+      canDetect1: "Tokenizer 不匹配(静默回退信号)",
+      canDetect2: "Q4 / Q8 量化指纹",
+      canDetect3: "安全 probe 集合上的拒答率偏差",
+      canDetect4: "嵌入距离离群(< 0.7 vs 原版)",
+      needsTitle: "需要连续采样的",
+      needs1: "价格随时间漂移",
+      needs2: "p95 / p99 延迟尾部",
+      needs3: "高负载下的回退透明度",
+      needs4: "信任度变化趋势(改善 / 恶化)",
     },
     wallet: {
       accountTag: "账户 · 钱包",

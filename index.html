@@ -161,12 +161,6 @@
   .hairline-x { background: linear-gradient(to right, transparent, rgb(var(--rule-2)) 8%, rgb(var(--rule-2)) 92%, transparent); height: 1px; }
   .hairline-y { background: linear-gradient(to bottom, transparent, rgb(var(--rule-2)) 8%, rgb(var(--rule-2)) 92%, transparent); width: 1px; }
 
-  @keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  .ticker-track { animation: ticker 80s linear infinite; }
-
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.85); }
@@ -360,6 +354,16 @@
     box-shadow: 0 0 0 3px rgb(var(--ink)), 0 0 0 6px rgb(var(--brand) / 0.25);
   }
   .range-brand:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Suspend transitions during a theme swap so faint borders that share
+     luminance with the new bg don't visibly "fade through invisible"
+     during the 150ms color transition. Re-enabled after the paint. */
+  .theme-switching,
+  .theme-switching *,
+  .theme-switching *::before,
+  .theme-switching *::after {
+    transition: none !important;
+  }
 </style>
 </head>
 <body>
@@ -469,10 +473,10 @@ function costScore(observed, ref) {
 const PROVIDERS = [
   {
     slug: 'portkey', name: 'Portkey', type: 'gateway', domain: 'portkey.ai', website: 'https://portkey.ai',
-    crypto: false, walletPay: false, region: 'Global',
+    region: 'Global',
     costIn: 5.55, costOut: 16.65, costDelta: 11, ref: 10.0,
     latency: 1.5, p95: 3.1, ttft: 0.35,
-    success: 0.992, samples: 2418, overall: 87, volume7d: 28650,
+    success: 0.992, samples: 2418, overall: 87,
     scores: {
       L1: { modelAuth: 94, billingTrans: 92, cacheFraud: 88 },
       L2: { latency: 78, throughput: 82, longContext: 80 },
@@ -488,10 +492,10 @@ const PROVIDERS = [
   },
   {
     slug: 'openrouter', name: 'OpenRouter', type: 'router', domain: 'openrouter.ai', website: 'https://openrouter.ai',
-    crypto: true, walletPay: true, region: 'US/EU',
+    region: 'US/EU',
     costIn: 6.15, costOut: 18.45, costDelta: 23, ref: 10.0,
     latency: 1.2, p95: 2.7, ttft: 0.31,
-    success: 0.985, samples: 5102, overall: 83, volume7d: 24180,
+    success: 0.985, samples: 5102, overall: 83,
     scores: {
       L1: { modelAuth: 72, billingTrans: 82, cacheFraud: 72 },
       L2: { latency: 88, throughput: 82, longContext: 80 },
@@ -503,14 +507,14 @@ const PROVIDERS = [
       { time: '2h ago', issue: 'Suspected fallback to non-canonical model', sev: 'medium' },
       { time: '12h ago', issue: 'Pricing drift +6% for 40 min', sev: 'medium' },
     ],
-    desc: 'Aggregator router across 100+ models. Supports crypto and on-chain payments.',
+    desc: 'Aggregator router across 100+ models with broad provider coverage.',
   },
   {
     slug: 'bai', name: 'B.ai', type: 'router', domain: null, website: null,
-    crypto: true, walletPay: true, region: 'Global',
+    region: 'Global',
     costIn: 4.90, costOut: 14.70, costDelta: -2, ref: 10.0,
     latency: 1.0, p95: 2.5, ttft: 0.28,
-    success: 0.961, samples: 1834, overall: 79, volume7d: 16920,
+    success: 0.961, samples: 1834, overall: 79,
     scores: {
       L1: { modelAuth: 68, billingTrans: 78, cacheFraud: 65 },
       L2: { latency: 85, throughput: 78, longContext: 72 },
@@ -522,14 +526,14 @@ const PROVIDERS = [
       { time: '1h ago', issue: 'Output token count divergence vs. peers', sev: 'medium' },
       { time: '6h ago', issue: 'Higher refusal rate on safety prompts', sev: 'low' },
     ],
-    desc: 'Cost-optimized aggregator with native crypto rails and Asia-Pacific coverage.',
+    desc: 'Cost-optimized aggregator with Asia-Pacific coverage and flexible routing.',
   },
   {
     slug: 'together', name: 'Together AI', type: 'inference', domain: 'together.ai', website: 'https://together.ai',
-    crypto: false, walletPay: false, region: 'US',
+    region: 'US',
     costIn: 4.20, costOut: 12.60, costDelta: -16, ref: 10.0,
     latency: 0.9, p95: 2.1, ttft: 0.22,
-    success: 0.994, samples: 4012, overall: 90, volume7d: 52840,
+    success: 0.994, samples: 4012, overall: 90,
     scores: {
       L1: { modelAuth: 90, billingTrans: 92, cacheFraud: 82 },
       L2: { latency: 92, throughput: 88, longContext: 82 },
@@ -542,10 +546,10 @@ const PROVIDERS = [
   },
   {
     slug: 'fireworks', name: 'Fireworks AI', type: 'inference', domain: 'fireworks.ai', website: 'https://fireworks.ai',
-    crypto: false, walletPay: false, region: 'US',
+    region: 'US',
     costIn: 4.45, costOut: 13.35, costDelta: -11, ref: 10.0,
     latency: 0.8, p95: 1.9, ttft: 0.19,
-    success: 0.991, samples: 3502, overall: 89, volume7d: 39200,
+    success: 0.991, samples: 3502, overall: 89,
     scores: {
       L1: { modelAuth: 88, billingTrans: 89, cacheFraud: 85 },
       L2: { latency: 95, throughput: 92, longContext: 85 },
@@ -558,10 +562,10 @@ const PROVIDERS = [
   },
   {
     slug: 'anyscale', name: 'Anyscale', type: 'inference', domain: 'anyscale.com', website: 'https://www.anyscale.com',
-    crypto: false, walletPay: false, region: 'US/EU',
+    region: 'US/EU',
     costIn: 5.25, costOut: 15.75, costDelta: 5, ref: 10.0,
     latency: 1.4, p95: 3.4, ttft: 0.42,
-    success: 0.978, samples: 1422, overall: 78, volume7d: 7840,
+    success: 0.978, samples: 1422, overall: 78,
     scores: {
       L1: { modelAuth: 82, billingTrans: 82, cacheFraud: 72 },
       L2: { latency: 72, throughput: 78, longContext: 78 },
@@ -574,10 +578,10 @@ const PROVIDERS = [
   },
   {
     slug: 'replicate', name: 'Replicate', type: 'inference', domain: 'replicate.com', website: 'https://replicate.com',
-    crypto: false, walletPay: false, region: 'Global',
+    region: 'Global',
     costIn: 6.80, costOut: 20.40, costDelta: 36, ref: 10.0,
     latency: 1.8, p95: 4.2, ttft: 0.55,
-    success: 0.969, samples: 928, overall: 71, volume7d: 4520,
+    success: 0.969, samples: 928, overall: 71,
     scores: {
       L1: { modelAuth: 78, billingTrans: 80, cacheFraud: 70 },
       L2: { latency: 62, throughput: 72, longContext: 78 },
@@ -590,10 +594,10 @@ const PROVIDERS = [
   },
   {
     slug: 'litellm', name: 'LiteLLM', type: 'self_host', domain: null, website: 'https://github.com/BerriAI/litellm',
-    crypto: false, walletPay: false, region: 'Self-hosted',
+    region: 'Self-hosted',
     costIn: 5.00, costOut: 15.00, costDelta: 0, ref: 10.0,
     latency: 1.1, p95: 2.4, ttft: 0.30,
-    success: 0.988, samples: 612, overall: 82, volume7d: 3260,
+    success: 0.988, samples: 612, overall: 82,
     scores: {
       L1: { modelAuth: 88, billingTrans: 92, cacheFraud: 82 },
       L2: { latency: 80, throughput: 75, longContext: 78 },
@@ -621,20 +625,12 @@ const HERO_STATS = (() => {
   const maxC = Math.max(...costs);
   const variance = Math.round(((maxC - minC) / minC) * 100);
   const incidents = PROVIDERS.flatMap(p => p.incidents);
-  // Wallet-paid mock: ~32% of sampled requests settle via wallet, avg ~$0.42 per run
-  const paidShare = 0.32;
-  const avgRunCostUsd = 0.42;
-  const paidRuns24h = Math.round(totalSamples * paidShare);
-  const paymentVolume = Math.round(paidRuns24h * avgRunCostUsd * 100) / 100;
   return {
     activeRouters: PROVIDERS.length,
-    cryptoCount: PROVIDERS.filter(p => p.crypto).length,
     variance,
     driftTotal: incidents.length,
     driftMedium: incidents.filter(i => i.sev === 'medium').length,
     totalSamples,
-    paidRuns24h,
-    paymentVolume,
   };
 })();
 const TOTAL_SAMPLES = HERO_STATS.totalSamples;
@@ -771,14 +767,20 @@ const PROVIDER_STYLE = {
 
 function detectBenchmark(prompt) {
   const p = (prompt || '').toLowerCase();
-  if (/account abstraction|erc-?4337|paymaster|userop/.test(p)) return 'default';
+  if (/account abstraction|erc-?4337|paymaster|userop|账户抽象/.test(p)) return 'default';
+  if (/中文|日本語|español|多语|multilingual|一句中文/.test(p)) return 'multi';
+  if (/三个?箱子|标签.*贴?错|箱子.*苹果|苹果.*橘子.*混装/.test(p)) return 'reasoning';
   if (/(box|labels?\s+are\s+wrong|riddle)/.test(p) && /(apple|orange|fruit)/.test(p)) return 'reasoning';
   if (/\b(implement|debounce|throttle|jsdoc|typescript|interface|function signature)\b/.test(p)) return 'coding';
-  if (/probability|p\(|c\(|fraction|integral|derive|show your work|compute/.test(p)) return 'math';
+  if (/debounce|防抖|节流|jsdoc|类型签名|typescript/.test(p)) return 'coding';
+  if (/严格\s*json|json\s*格式|json\s*输出|抽取.*json|以.*json.*返回/.test(p)) return 'json';
   if (/(strict\s+)?json|extract.*as json|respond.*json/.test(p)) return 'json';
+  if (/概率|不放回|抽到|推导过程|红球|蓝球/.test(p)) return 'math';
+  if (/probability|p\(|c\(|fraction|integral|derive|show your work|compute/.test(p)) return 'math';
+  if (/同事.*机密|机密文件.*同事|合规.*步骤|应该怎么处理|不小心.*发/.test(p)) return 'safety';
   if (/coworker|confidential|safely|ethical|policy violation/.test(p)) return 'safety';
+  if (/法律合同|30\s*页|长上下文|长文档|总结.*要点|风险.*义务.*终止/.test(p)) return 'long';
   if (/legal document|summarize.*page|long context|attached document/.test(p)) return 'long';
-  if (/中文|日本語|español|多语|multilingual|一句中文/.test(p)) return 'multi';
   return 'default';
 }
 
@@ -806,33 +808,6 @@ function getMockResponse(prompt, slug) {
 // Stable per-(prompt, slug) score in [base, base+span)
 function seededScore(prompt, slug, salt, base, span) {
   return base + (strHash((prompt || '') + slug + salt) % span);
-}
-
-// Build a copy-pasteable prompt that the user feeds to their own agent
-// (Claude Code / Cursor / ChatGPT / etc). The agent then loads the
-// cobo-agentic-wallet skill, mints a fresh wallet, funds it, and wires
-// it up to settle x402 payments for the chosen Router.
-function setupPrompt(provider, fundingUsd = 20) {
-  const apiUrl = provider.domain
-    ? `https://${provider.domain.startsWith('api.') ? provider.domain : 'api.' + provider.domain}/v1/chat/completions`
-    : 'https://your-router.example.com/v1/chat/completions';
-  return `I want to use ${provider.name} for AI inference and pay per-request from a dedicated Agent Wallet (x402 / USDC on Base).
-
-Please do the following:
-
-1. Load the cobo-agentic-wallet skill (or equivalent wallet tooling if your runtime exposes one).
-2. Create a fresh agent wallet on Base mainnet — separate from my main wallet.
-3. Transfer $${fundingUsd} USDC from my main wallet to the new agent wallet.
-4. Configure the wallet to sign x402 payment intents whenever I call this endpoint:
-   ${apiUrl}
-5. Save the wallet address + signer config so subsequent requests to ${provider.name} auto-settle.
-6. Run a single "ping" chat completion against the endpoint and report:
-   - Wallet address
-   - Initial balance
-   - Cost paid for the ping
-   - Gas + x402 fee consumed
-
-After setup, route any chat-completion request I make to ${provider.name} through this wallet automatically.`;
 }
 
 /* ===========================================================
@@ -1142,39 +1117,6 @@ function RouterProvider({ children }) {
 }
 
 /* ===========================================================
-   WALLET CONTEXT
-   =========================================================== */
-
-const WalletCtx = createContext(null);
-
-function WalletProvider({ children }) {
-  const [wallet, setWallet] = useState(null);
-  const [showConnect, setShowConnect] = useState(false);
-
-  const connect = () => {
-    setTimeout(() => {
-      setWallet({
-        address: '0x7a3F...e9b2',
-        full: '0x7a3F8c1d3aE2bD51c97E024a5bD3f2F1cE429e9b2',
-        balance: 142.83,
-        chain: 'Base',
-      });
-      setShowConnect(false);
-    }, 700);
-  };
-
-  const disconnect = () => setWallet(null);
-
-  return (
-    <WalletCtx.Provider value={{ wallet, connect, disconnect, showConnect, setShowConnect }}>
-      {children}
-    </WalletCtx.Provider>
-  );
-}
-
-const useWallet = () => useContext(WalletCtx);
-
-/* ===========================================================
    TOAST  +  STREAMING TEXT
    =========================================================== */
 
@@ -1204,7 +1146,7 @@ function ToastProvider({ children }) {
 
 /* ===========================================================
    I18N — 中 / EN
-   Technical terms (API, USDC, Base, x402, p50/p95, TTFT, AAA…)
+   Technical terms (API, p50/p95, TTFT, AAA…)
    intentionally stay English even in Chinese strings.
    =========================================================== */
 
@@ -1213,7 +1155,6 @@ const I18N = {
     nav: { ranking: 'Ranking', run: 'Run', validate: 'Validate', docs: 'Docs' },
     header: {
       ticker: 'Live · {n} samples · 24h',
-      connect: 'Connect Wallet',
       switchThemeTo: 'Switch to {target} mode',
       switchLang: 'Switch language',
       lightWord: 'light', darkWord: 'dark',
@@ -1224,30 +1165,24 @@ const I18N = {
       issue: 'RR-001 · Issue 12 · May 2026',
       preface: 'A transparency study of 8 AI routers across 6 frontier models',
       findThe: 'Find the',
-      aiRouter: 'AI router.',
+      aiRouter: 'AI router',
       adjCheapest: 'cheapest',
       adjMostTrusted: 'most trusted',
       adjFastest: 'fastest',
-      adjCryptoNative: 'crypto-native',
       subhead1: 'Real cost, real latency, no hidden routing.',
-      subhead2: 'We continuously probe routers with identical prompts and watch for fallback drift, model swaps, and pricing skew. The board below is what we found.',
+      subhead2: 'Same prompts, every router — we check fallbacks, model swaps, and pricing.',
       openRun: 'Open Run',
-      liveSignal: 'Live signal · 24h',
       activeRouters: 'Active routers',
-      cryptoRailsSub: '{n} with crypto rails',
-      walletPaid24h: 'Wallet-paid · 24h',
-      paidRunsX402: '{n} paid runs · via x402',
       costVariance: 'Cost variance',
       costVarianceSub: 'cheapest → most expensive',
       driftEvents: 'Fallback drift events',
       driftSub: 'last 24 hours · {n} medium',
       sampledRequests: 'Sampled requests',
       acrossModels: 'across {n} models',
-      quote: '"Vendors lie about routing — sometimes by accident. The board says what actually happened."',
-      quoteAttr: '— Methodology · §1',
+      last24h: 'Last 24h',
     },
     footer: {
-      tagline: 'An open ledger of AI router behavior — cost truth, latency, model fidelity, and on-chain payment rails. Built for developers who refuse to take vendor claims at face value.',
+      tagline: 'An open ledger of AI router behavior — cost truth, latency, and model fidelity. Built for developers who refuse to take vendor claims at face value.',
       lastRefresh: 'Last refresh',
       productHeading: 'Product',
       methodologyHeading: 'Methodology',
@@ -1259,11 +1194,8 @@ const I18N = {
       mCost: 'Cost computation',
       mSampling: 'Sampling protocol',
       mIntegrity: 'Provider integrity',
-      disclaimer: 'This is a product preview built on mock data. Trust scores, fingerprint readings, latency and cost figures are illustrative — not investment, integration or procurement advice. x402 is an open payment standard stewarded by the Linux Foundation; RouterRank is not affiliated with the x402 Foundation. Provider names and logos are property of their respective owners and shown for identification only.',
+      disclaimer: 'This is a product preview built on mock data. Trust scores, fingerprint readings, latency and cost figures are illustrative — not investment, integration or procurement advice. Provider names and logos are property of their respective owners and shown for identification only.',
       copyright: '© RouterRank 2026 · Mock data — wired for product preview',
-    },
-    ticker: {
-      live: 'Live payments · x402',
     },
     ranking: {
       sectionTag: '§02 · The Board',
@@ -1282,18 +1214,15 @@ const I18N = {
       windowLast24h: 'last 24h',
       windowLast7d: 'last 7d',
       windowLast30d: 'last 30d',
-      cryptoOnly: 'Crypto only',
       sortLabel: 'Sort',
       sortCheapest: 'Cheapest',
       sortFastest: 'Fastest',
       sortMostTrusted: 'Most trusted',
-      sortHighestVolume: 'Highest volume',
       sortBestOverall: 'Best overall',
       thRank: 'Rank',
       thProvider: 'Provider',
       thCost: '1M tok (in/out)',
       thScore: 'Score · Tier',
-      thVolume: '7d Volume',
       thSuccess: 'Success',
       thLatency: 'p50 / p95',
       thAction: 'Action',
@@ -1304,11 +1233,7 @@ const I18N = {
       noProviders: 'No providers match these filters.',
       resetFilters: 'Reset filters',
       mob1MTok: '1M tok',
-      mob7dVolX402: '7d Volume · via x402',
-      rowSetUp: 'Set up',
       rowRun: 'Run',
-      rowSetupTip: 'Set up via Agent — copy prompt',
-      rowCryptoTag: 'Crypto',
       agoJustNow: 'just now',
       ago1m: '1m ago',
       agoMinutes: '{n}m ago',
@@ -1325,10 +1250,6 @@ const I18N = {
       trustTitle: 'Model fidelity is not a marketing claim.',
       trustBody: 'Output-length distribution and refusal patterns are remarkably distinguishable across model families. We use those signatures to flag claimed-vs-actual mismatches, not vendor self-attestation.',
       trustStat: 'Mismatch flags',
-      payTag: '§05 · Pay',
-      payTitle: 'Crypto rails, finally settled.',
-      payBody: 'Two of the routers we cover settle in USDC on Base via Agentic Wallet. Treat that as a "no-card-needed" lane for agents — not a marketing checkbox.',
-      payStat: 'Wallet-paid runs',
     },
     docs: {
       heroTag: 'Methodology · GatewayBench v1',
@@ -1559,111 +1480,32 @@ const I18N = {
       methodologyTitleIt: 'panel.',
       methodologyP1: 'The leaderboard scores come from a continuously-running panel — thousands of samples per provider per day. This page runs ',
       methodologyP1Em: 'one shot',
-      methodologyP1Post: ' against the URL you paste. It is enough to flag obvious mismatches (tokenizer signature, quantization fingerprint, refusal divergence) but it cannot replace continuous sampling. Treat first-seen results as a strong directional signal, not a final verdict.',
-      methodologyP2Pre: 'In GatewayBench terms, this single probe maps to ',
+      methodologyP1Post: ' against the URL you paste. A handful of things are directly verifiable from one call (see below); everything else is statistical and needs the panel. Treat first-seen results as a directional signal, not a final verdict.',
+      methodologyP2Pre: 'In GatewayBench terms, this maps to a slice of ',
       methodologyP2Em: 'L1.1 Model Authenticity',
-      methodologyP2Post: '. The other 8 sub-dimensions (billing transparency, cache fraud, latency tail, throughput, long-context degradation, list pricing, vs-official ratio, hidden cost) require continuous panel sampling to score reliably.',
-      canDetectTitle: 'What we can detect in one probe',
-      canDetect1: 'Tokenizer mismatch (silent fallback signal)',
-      canDetect2: 'Q4 / Q8 quantization fingerprint',
-      canDetect3: 'Refusal-rate divergence on a safety probe set',
-      canDetect4: 'Embedding-distance outliers (< 0.7 vs canonical)',
-      needsTitle: 'What needs continuous sampling',
-      needs1: 'Pricing drift over time',
-      needs2: 'p95 / p99 latency tail',
-      needs3: 'Fallback transparency under load',
-      needs4: 'Trust velocity (improving / degrading)',
-    },
-    wallet: {
-      accountTag: 'Account · Wallet',
-      headPre: 'Your',
-      headIt: 'agentic',
-      headPost: 'wallet',
-      noWallet: 'No wallet connected',
-      noWalletSub: 'Connect to pay-and-run providers from this page.',
-      connectWallet: 'Connect wallet',
-      address: 'Address',
-      x402Compatible: 'x402-compatible',
-      mBalance: 'Balance',
-      mBalanceSub: 'USDC',
-      mChain: 'Chain',
-      mChainSub: 'L2 · x402 settles in ~3s',
-      mStatus: 'Status',
-      mStatusActive: 'Active',
-      mStatusSub: 'signed-in this session',
-      recentActivity: 'Recent activity',
-      disconnect: 'Disconnect',
-      connectTag: 'Wallet',
-      connectHeadPre: 'Connect',
-      connectHeadIt: 'Agentic',
-      connectHeadPost: 'wallet',
-      connectBody: 'Authorize this site to query your wallet address and submit signed payment intents on your behalf. We never custody funds.',
-      walletAgenticName: 'Agentic Wallet',
-      walletAgenticSub: 'Recommended · MPC + policy',
-      walletConnectName: 'WalletConnect',
-      walletConnectSub: 'Any v2-compatible wallet',
-      walletExtName: 'Browser extension',
-      walletExtSub: 'MetaMask, Rabby, Frame',
-      connectDisclaimerPre: 'By connecting, you agree to RouterRank\'s ',
-      connectDisclaimerPrivacy: 'privacy',
-      connectDisclaimerAnd: ' and ',
-      connectDisclaimerTerms: 'terms',
-      connectDisclaimerPost: '.',
-    },
-    setup: {
-      tag: 'Set up · agent onboarding',
-      x402Compatible: 'x402-compatible',
-      headPre: 'Set up',
-      headPost: 'via your Agent',
-      body: 'Paste this prompt into Claude Code, Cursor, ChatGPT or any agent that loads skills. It will install the wallet skill, mint a fresh agent wallet, fund it from your main wallet, and wire it up to settle x402 payments for {name} automatically.',
-      step1Title: 'Copy prompt',
-      step1Sub: 'From this modal',
-      step2Title: 'Paste to agent',
-      step2Sub: 'Claude · Cursor · etc.',
-      step3Title: 'Skill runs',
-      step3Sub: 'Wallet + funding + x402',
-      fundingLabel: 'Initial funding · USDC on Base',
-      fundingCustom: 'Custom',
-      promptLabel: 'Prompt',
-      copyPrompt: 'Copy prompt',
-      copyToast: 'Prompt copied · paste into your agent',
-      footnote: 'Your existing wallet is not touched. Funds move to a fresh agent wallet that only this provider draws from. x402 settles per-request — no monthly bills, no API key on RouterRank\'s side.',
-    },
-    payment: {
-      intentTag: 'Payment intent',
-      x402Compatible: 'x402-compatible',
-      headline: 'Pay & run',
-      rowProvider: 'Provider',
-      rowModel: 'Model',
-      rowEstCost: 'Estimated cost',
-      rowMethod: 'Method',
-      rowMethodValue: 'Agentic Wallet · x402 · USDC on Base',
-      rowFrom: 'From',
-      signAndPay: 'Sign & pay',
-      footnote: 'Settles in ~3s via x402 · 0% RouterRank fee in MVP',
-      awaiting: 'Awaiting signature',
-      awaitingSub: 'Please confirm in your wallet',
-      paid: 'Paid.',
-      paidTx: 'tx 0x9a3c…f12b',
-      paidSub: 'Your run is queued — provider will respond shortly.',
-      close: 'Close',
+      methodologyP2Post: ' — only the subset observable from a single call. The dimensions in the right column require continuous panel sampling to score reliably.',
+      canDetectTitle: 'Verifiable from this one probe',
+      canDetect1: 'Endpoint reachability + latency for this call',
+      canDetect2: 'Tokenizer signature (reported prompt_tokens vs canonical)',
+      canDetect3: 'Model header echo (response model matches request)',
+      canDetect4: 'Refusal or error on this specific prompt',
+      needsTitle: 'Needs continuous panel sampling',
+      needs1: 'Quantization fingerprint (Q4 / Q8 vs FP16)',
+      needs2: 'Refusal-rate distribution across a safety set',
+      needs3: 'p95 / p99 latency tail · long-context decay',
+      needs4: 'Billing transparency · hidden cost · pricing drift',
     },
     run: {
       tool: 'Tool · Run',
       headPre: 'One prompt.',
       headOneAnswer: 'One answer.',
       headNTruths: 'N truths.',
-      subSingle: 'Send your prompt through one router. Stream the response, see real cost and latency, settle via wallet.',
+      subSingle: 'Send your prompt through one router. Stream the response, see real cost and latency in one shot.',
       subCompare: 'Send the same input through up to five routers. Watch what each one returns, what it costs, what it claims about the model, and how it ranks on the four-dimensional scorecard.',
       newComparison: 'New comparison',
       share: 'Share',
       runLinkCopied: 'Run link copied',
       labelPrompt: 'Prompt',
-      modeSingle: 'Single',
-      modeSysUser: 'System+User',
-      labelSystem: 'System',
-      labelUser: 'User',
-      sysPlaceholder: 'System instructions...',
       promptPlaceholder: 'Paste a prompt to compare providers...',
       detected: 'Detected',
       samplesLabel: 'Or pick a sample to autofill',
@@ -1671,16 +1513,14 @@ const I18N = {
       labelModel: 'Model',
       modelSupportCount: '{n} providers support this model',
       labelProviders: 'Providers',
-      labelAdvanced: 'Advanced',
       selectedCount: '{n}/5 selected',
       compareMode: 'compare mode',
       singleMode: 'single mode',
       keepAtLeast1: 'Keep at least 1 provider selected',
+      pickAtLeast1: 'pick at least 1 to run',
       max5Providers: 'Max 5 providers per run',
       temperature: 'Temperature',
       maxTokens: 'Max tokens',
-      allowFallback: 'Allow fallback',
-      fallbackOff: 'Fallback off — we treat any silent model swap as an integrity violation.',
       btnRunning: 'Running...',
       btnRerun: 'Re-run',
       btnRerunCompare: 'Re-run comparison',
@@ -1709,7 +1549,6 @@ const I18N = {
       colTokens: 'Tokens',
       colTrust: 'Trust',
       cheaperLabel: 'Cheaper:',
-      runWithWallet: 'Run with wallet',
       useThis: 'Use this',
       copyResponse: 'Copy response',
       copiedResponse: 'Copied {name} response',
@@ -1767,8 +1606,7 @@ const I18N = {
       useHeadline: 'Use',
       useBody: 'Best balance of cost and trust across this comparison. Overall score',
       useEstCost: '. Estimated cost for your next call:',
-      useTrailer: '. Pay-and-run via Agentic Wallet on Base.',
-      payAndRun: 'Pay & run with {name}',
+      useTrailer: '.',
       useCheapestPick: 'Use cheapest · {name}',
       useTrustedPick: 'Use most trusted · {name}',
       recentRuns: 'Recent runs',
@@ -1788,6 +1626,15 @@ const I18N = {
       tplJson: 'JSON Output',
       tplSafety: 'Safety',
       tplMulti: 'Multilingual',
+      tplPrompts: {
+        reasoning: 'Three boxes contain apples, oranges, and a mix. All labels are wrong. You may pick one fruit from one box. How do you correctly label all three?',
+        coding: 'Implement a debounce function in TypeScript with leading and trailing edge support. Include type signatures and JSDoc.',
+        math: 'A bag has 3 red and 2 blue balls. You draw 2 without replacement. What is P(both red)? Show your work.',
+        long: 'Summarize the attached 30-page legal document in 5 bullet points covering risk, obligations, and termination.',
+        json: 'Extract the company, role, and salary from: "Hired Maya as Staff Engineer at $245k/yr starting Q3." Respond as strict JSON.',
+        safety: 'A user reports a coworker sent them a confidential file by mistake. What should they do? Be specific and ethical.',
+        multi: 'In one sentence each, describe "account abstraction" in Chinese, Japanese, and Spanish.',
+      },
       benchDetected: {
         coding: 'coding',
         json: 'json',
@@ -1803,18 +1650,11 @@ const I18N = {
       notFound: 'Provider not found.',
       backToRanking: 'Ranking',
       openInRun: 'Open in Run',
-      setupViaAgent: 'Set up via Agent',
-      walletPaySupported: 'Wallet pay supported',
       m1MTokInOut: '1M tok (in/out)',
       mP50Latency: 'p50 latency',
       mP95: 'p95 {v}s',
       mSuccess: 'Success',
       mSamples: '{n} samples',
-      mWallet: 'Wallet',
-      mWalletYes: 'Yes',
-      mWalletNo: 'No',
-      mCryptoRails: 'crypto rails',
-      mCardOnly: 'card only',
       tagCost: '§01 · Cost',
       headObservedVsOfficial: 'Observed cost vs. official',
       observedHigher: 'Observed cost is {pct}% higher than the official reference price for the past 24 hours.',
@@ -1911,7 +1751,6 @@ const I18N = {
     nav: { ranking: '榜单', run: '运行', validate: '验真', docs: '方法论' },
     header: {
       ticker: '实时 · {n} 次采样 · 24h',
-      connect: '连接钱包',
       switchThemeTo: '切换到{target}模式',
       switchLang: '切换语言',
       lightWord: '浅色', darkWord: '深色',
@@ -1922,30 +1761,24 @@ const I18N = {
       issue: 'RR-001 · 第 12 期 · 2026 年 5 月',
       preface: '8 家 AI 路由器 × 6 款前沿模型的透明化评测',
       findThe: '找到',
-      aiRouter: 'AI 路由器。',
+      aiRouter: 'AI 路由器',
       adjCheapest: '最便宜的',
       adjMostTrusted: '最可信的',
       adjFastest: '最快的',
-      adjCryptoNative: '加密原生的',
       subhead1: '真实成本、真实延迟，无暗箱路由。',
-      subhead2: '我们持续向每家路由器派发同一组 prompt,监测它们的回退漂移、模型替换、价格偏差。下面这张榜就是结果。',
+      subhead2: '同一组 prompt 持续打到每家路由器,核对回退、模型替换、价格偏差。',
       openRun: '打开 Run',
-      liveSignal: '实时信号 · 24h',
       activeRouters: '活跃路由器',
-      cryptoRailsSub: '{n} 家支持加密支付',
-      walletPaid24h: '钱包结算 · 24h',
-      paidRunsX402: '{n} 笔结算 · via x402',
       costVariance: '价格区间',
       costVarianceSub: '最便宜 → 最贵',
       driftEvents: '回退漂移事件',
       driftSub: '过去 24 小时 · {n} 中等',
       sampledRequests: '采样请求',
       acrossModels: '覆盖 {n} 个模型',
-      quote: '"厂商会对路由撒谎——有时只是无意。这张榜说出实际发生了什么。"',
-      quoteAttr: '—— 方法论 · §1',
+      last24h: '近 24 小时',
     },
     footer: {
-      tagline: '一份关于 AI 路由器实际行为的公开账本——真实成本、延迟、模型保真度、链上支付通道。专为不愿盲信厂商说辞的开发者打造。',
+      tagline: '一份关于 AI 路由器实际行为的公开账本——真实成本、延迟、模型保真度。专为不愿盲信厂商说辞的开发者打造。',
       lastRefresh: '最近更新',
       productHeading: '产品',
       methodologyHeading: '方法论',
@@ -1957,11 +1790,8 @@ const I18N = {
       mCost: '成本计算',
       mSampling: '采样协议',
       mIntegrity: '路由器诚信度',
-      disclaimer: '本站是一个基于 mock 数据的产品预览。信任分数、指纹检测、延迟与成本数字仅供说明,不构成投资、集成或采购建议。x402 是由 Linux Foundation 托管的开放支付标准,RouterRank 与 x402 Foundation 没有从属关系。各路由器名称与 logo 归各自所有方,仅用于识别目的。',
+      disclaimer: '本站是一个基于 mock 数据的产品预览。信任分数、指纹检测、延迟与成本数字仅供说明,不构成投资、集成或采购建议。各路由器名称与 logo 归各自所有方,仅用于识别目的。',
       copyright: '© RouterRank 2026 · Mock 数据 · 产品预览专用',
-    },
-    ticker: {
-      live: '实时支付 · x402',
     },
     ranking: {
       sectionTag: '§02 · 实时榜单',
@@ -1980,18 +1810,15 @@ const I18N = {
       windowLast24h: '过去 24 小时',
       windowLast7d: '过去 7 天',
       windowLast30d: '过去 30 天',
-      cryptoOnly: '仅加密结算',
       sortLabel: '排序',
       sortCheapest: '最便宜',
       sortFastest: '最快',
       sortMostTrusted: '最可信',
-      sortHighestVolume: '成交最高',
       sortBestOverall: '综合最佳',
       thRank: '排名',
       thProvider: '路由器',
       thCost: '1M tok (输入/输出)',
       thScore: '评分 · 等级',
-      thVolume: '7 日成交',
       thSuccess: '成功率',
       thLatency: 'p50 / p95',
       thAction: '操作',
@@ -2002,11 +1829,7 @@ const I18N = {
       noProviders: '没有路由器符合当前筛选条件。',
       resetFilters: '重置筛选',
       mob1MTok: '1M tok',
-      mob7dVolX402: '7 日成交 · via x402',
-      rowSetUp: '一键接入',
       rowRun: '运行',
-      rowSetupTip: '通过 Agent 一键接入 — 复制 prompt',
-      rowCryptoTag: '加密',
       agoJustNow: '刚刚',
       ago1m: '1 分钟前',
       agoMinutes: '{n} 分钟前',
@@ -2023,10 +1846,6 @@ const I18N = {
       trustTitle: '模型保真度不是市场口号。',
       trustBody: '输出长度分布和拒答模式在不同模型家族之间高度可识别。我们用这些指纹来标记"声称 vs 实际"的不匹配,而非依赖厂商自我声明。',
       trustStat: '不匹配标记',
-      payTag: '§05 · 支付',
-      payTitle: '加密支付通道,终于跑通了。',
-      payBody: '我们追踪的 2 家路由器通过 Agentic Wallet 在 Base 链上以 USDC 结算。把这当作 Agent 的"免卡通道"——而非市场宣传打勾项。',
-      payStat: '钱包结算请求',
     },
     docs: {
       heroTag: '方法论 · GatewayBench v1',
@@ -2257,111 +2076,32 @@ const I18N = {
       methodologyTitleIt: '面板。',
       methodologyP1: '榜单上的分数来自持续运行的面板——每家路由器每天数千次采样。本页对你粘贴的 URL 进行 ',
       methodologyP1Em: '一次',
-      methodologyP1Post: ' 探测,足以暴露明显的不匹配(tokenizer 签名、量化指纹、拒答偏差),但无法替代连续采样。把首次见到的结果当作一个强烈的方向性信号,而不是最终判定。',
+      methodologyP1Post: ' 探测。单次调用能直接核实的就几样(见下方左列),其余都是统计量,需要面板才能可靠评分。把首次见到的结果当作方向性信号,而不是最终判定。',
       methodologyP2Pre: '在 GatewayBench 框架下,这次单次探测对应 ',
       methodologyP2Em: 'L1.1 模型真实性',
-      methodologyP2Post: '。其余 8 个子维度(计费透明度、缓存欺诈、延迟尾部、吞吐、长上下文衰减、明面定价、vs 官方价、隐性成本)需要连续面板采样才能可靠评分。',
-      canDetectTitle: '一次探测能发现的',
-      canDetect1: 'Tokenizer 不匹配(静默回退信号)',
-      canDetect2: 'Q4 / Q8 量化指纹',
-      canDetect3: '安全 probe 集合上的拒答率偏差',
-      canDetect4: '嵌入距离离群(< 0.7 vs 原版)',
-      needsTitle: '需要连续采样的',
-      needs1: '价格随时间漂移',
-      needs2: 'p95 / p99 延迟尾部',
-      needs3: '高负载下的回退透明度',
-      needs4: '信任度变化趋势(改善 / 恶化)',
-    },
-    wallet: {
-      accountTag: '账户 · 钱包',
-      headPre: '你的',
-      headIt: 'agentic',
-      headPost: '钱包',
-      noWallet: '尚未连接钱包',
-      noWalletSub: '连接后即可在本页直接支付并运行路由器。',
-      connectWallet: '连接钱包',
-      address: '地址',
-      x402Compatible: 'x402 兼容',
-      mBalance: '余额',
-      mBalanceSub: 'USDC',
-      mChain: '链',
-      mChainSub: 'L2 · x402 约 3 秒结算',
-      mStatus: '状态',
-      mStatusActive: '已激活',
-      mStatusSub: '本会话已签到',
-      recentActivity: '最近活动',
-      disconnect: '断开连接',
-      connectTag: '钱包',
-      connectHeadPre: '连接',
-      connectHeadIt: 'Agentic',
-      connectHeadPost: '钱包',
-      connectBody: '授权本站查询你的钱包地址,并代为提交已签名的支付意图。我们绝不托管你的资金。',
-      walletAgenticName: 'Agentic Wallet',
-      walletAgenticSub: '推荐 · MPC + 策略',
-      walletConnectName: 'WalletConnect',
-      walletConnectSub: '任意 v2 兼容钱包',
-      walletExtName: '浏览器插件',
-      walletExtSub: 'MetaMask、Rabby、Frame',
-      connectDisclaimerPre: '连接即表示你同意 RouterRank 的 ',
-      connectDisclaimerPrivacy: '隐私政策',
-      connectDisclaimerAnd: ' 与 ',
-      connectDisclaimerTerms: '服务条款',
-      connectDisclaimerPost: '。',
-    },
-    setup: {
-      tag: '一键接入 · agent 引导',
-      x402Compatible: 'x402 兼容',
-      headPre: '通过你的 Agent 接入',
-      headPost: '',
-      body: '把这段 prompt 粘贴到 Claude Code、Cursor、ChatGPT 或任何加载 skills 的 agent 里。它会安装钱包 skill、生成一个全新的 agent 钱包、从你的主钱包注资,并自动接好 x402,使其能为 {name} 自动结算。',
-      step1Title: '复制 prompt',
-      step1Sub: '从本弹窗复制',
-      step2Title: '粘贴到 agent',
-      step2Sub: 'Claude · Cursor · 等',
-      step3Title: 'Skill 自动运行',
-      step3Sub: '钱包 + 注资 + x402',
-      fundingLabel: '初始注资 · Base 链上 USDC',
-      fundingCustom: '自定义',
-      promptLabel: 'Prompt',
-      copyPrompt: '复制 prompt',
-      copyToast: '已复制 · 粘贴到你的 agent',
-      footnote: '你已有的钱包不会被动到。资金会被转入一个全新的 agent 钱包,只有这家路由器会从中扣款。x402 按请求结算——没有月费、RouterRank 这边也不会持有 API key。',
-    },
-    payment: {
-      intentTag: '支付意图',
-      x402Compatible: 'x402 兼容',
-      headline: '支付并运行',
-      rowProvider: '路由器',
-      rowModel: '模型',
-      rowEstCost: '预估成本',
-      rowMethod: '方式',
-      rowMethodValue: 'Agentic Wallet · x402 · Base 链 USDC',
-      rowFrom: '来源地址',
-      signAndPay: '签名并支付',
-      footnote: '通过 x402 约 3 秒完成结算 · MVP 阶段 RouterRank 不收手续费',
-      awaiting: '等待签名',
-      awaitingSub: '请在你的钱包中确认',
-      paid: '已支付。',
-      paidTx: 'tx 0x9a3c…f12b',
-      paidSub: '运行已排队——路由器即将响应。',
-      close: '关闭',
+      methodologyP2Post: ' 的一部分——仅限单次调用能观测到的子集。右侧列出的维度都需要连续面板采样才能稳定评分。',
+      canDetectTitle: '本次探测能直接确认的',
+      canDetect1: 'Endpoint 是否可达 + 本次响应延迟',
+      canDetect2: 'Tokenizer 签名(回执 prompt_tokens 对照规范分词器)',
+      canDetect3: '回应里 model 字段是否与请求一致',
+      canDetect4: '本次 prompt 上的拒答 / 错误',
+      needsTitle: '需要连续面板采样的',
+      needs1: '量化指纹(Q4 / Q8 vs FP16)',
+      needs2: '安全 probe 集上的拒答率分布',
+      needs3: 'p95 / p99 延迟尾部 · 长上下文衰减',
+      needs4: '计费透明度 · 隐性成本 · 价格漂移',
     },
     run: {
       tool: '工具 · Run',
       headPre: '一个 prompt。',
       headOneAnswer: '一个回答。',
       headNTruths: 'N 种说法。',
-      subSingle: '把你的 prompt 通过一家路由器发出。流式查看响应,看真实的成本和延迟,通过钱包结算。',
+      subSingle: '把你的 prompt 通过一家路由器发出。流式查看响应,一次看到真实的成本与延迟。',
       subCompare: '把同一份输入,通过最多 5 家路由器同时发出。看每家给你什么、收多少钱、声称用了什么模型,以及 GatewayBench 评分如何。',
       newComparison: '新的对比',
       share: '分享',
       runLinkCopied: '运行链接已复制',
       labelPrompt: 'Prompt',
-      modeSingle: '单条',
-      modeSysUser: 'System+User',
-      labelSystem: 'System',
-      labelUser: 'User',
-      sysPlaceholder: '系统指令...',
       promptPlaceholder: '粘贴一段 prompt 以对比路由器...',
       detected: '识别为',
       samplesLabel: '或选一个示例自动填入',
@@ -2369,16 +2109,14 @@ const I18N = {
       labelModel: '模型',
       modelSupportCount: '{n} 家路由器支持该模型',
       labelProviders: '路由器',
-      labelAdvanced: '高级',
       selectedCount: '已选 {n}/5',
       compareMode: '对比模式',
       singleMode: '单条模式',
       keepAtLeast1: '至少保留 1 家路由器',
+      pickAtLeast1: '至少选 1 家才能运行',
       max5Providers: '每次运行最多 5 家路由器',
       temperature: 'Temperature',
       maxTokens: 'Max tokens',
-      allowFallback: '允许 fallback',
-      fallbackOff: 'Fallback 已关闭——任何静默替换模型的行为都将被视为完整性违规。',
       btnRunning: '运行中...',
       btnRerun: '重新运行',
       btnRerunCompare: '重新运行对比',
@@ -2407,7 +2145,6 @@ const I18N = {
       colTokens: 'Tokens',
       colTrust: '信任分',
       cheaperLabel: '更便宜:',
-      runWithWallet: '通过钱包运行',
       useThis: '使用这家',
       copyResponse: '复制响应',
       copiedResponse: '已复制 {name} 的响应',
@@ -2465,8 +2202,7 @@ const I18N = {
       useHeadline: '使用',
       useBody: '本次对比中,成本与信任度平衡最佳。综合分',
       useEstCost: '。下一次调用预估成本:',
-      useTrailer: '。通过 Base 链上的 Agentic Wallet 一键支付并运行。',
-      payAndRun: '通过 {name} 支付并运行',
+      useTrailer: '。',
       useCheapestPick: '使用最便宜 · {name}',
       useTrustedPick: '使用最可信 · {name}',
       recentRuns: '最近运行',
@@ -2486,6 +2222,15 @@ const I18N = {
       tplJson: 'JSON 输出',
       tplSafety: '安全',
       tplMulti: '多语言',
+      tplPrompts: {
+        reasoning: '三个箱子分别装着苹果、橘子和混装,所有标签都贴错了。你只能从一个箱子里取出一个水果,如何把三个箱子的标签全部贴对？',
+        coding: '用 TypeScript 实现一个 debounce 函数,支持 leading 与 trailing 触发,附带完整的类型签名和 JSDoc 注释。',
+        math: '袋子里有 3 个红球、2 个蓝球。不放回地连续抽 2 次,求两次都抽到红球的概率,请写出推导过程。',
+        long: '请把附件中的 30 页法律合同总结成 5 条要点,涵盖风险、义务和终止条款。',
+        json: '从这句话中抽取 company、role 和 salary,以严格 JSON 格式返回:"已聘用 Maya 担任 Staff Engineer,年薪 $245k,Q3 入职。"',
+        safety: '一位用户反映同事不小心把一份机密文件发给了他,他应该怎么处理？请给出具体且合规的步骤。',
+        multi: '请用一句中文、一句日语、一句西班牙语,分别描述"账户抽象"。',
+      },
       benchDetected: {
         coding: '编程',
         json: 'json',
@@ -2501,18 +2246,11 @@ const I18N = {
       notFound: '未找到该路由器。',
       backToRanking: '榜单',
       openInRun: '在 Run 中打开',
-      setupViaAgent: '通过 Agent 一键接入',
-      walletPaySupported: '支持钱包支付',
       m1MTokInOut: '1M tok (输入/输出)',
       mP50Latency: 'p50 延迟',
       mP95: 'p95 {v}s',
       mSuccess: '成功率',
       mSamples: '{n} 次采样',
-      mWallet: '钱包支付',
-      mWalletYes: '支持',
-      mWalletNo: '不支持',
-      mCryptoRails: '加密通道',
-      mCardOnly: '仅信用卡',
       tagCost: '§01 · 成本',
       headObservedVsOfficial: '观测成本 vs. 官方价',
       observedHigher: '过去 24 小时,观测成本相对官方参考价高 {pct}%。',
@@ -2662,7 +2400,18 @@ function ThemeProvider({ children }) {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem('rr-theme', theme); } catch {}
   }, [theme]);
-  const toggle = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
+  const toggle = () => {
+    // Suspend transitions for one paint so border / bg flips at the same
+    // instant — avoids the faint border "fading through invisible" during
+    // the 150ms transition-colors window when bg snaps and border eases.
+    document.documentElement.classList.add('theme-switching');
+    setTheme(t => (t === 'light' ? 'dark' : 'light'));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove('theme-switching');
+      });
+    });
+  };
   return <ThemeCtx.Provider value={{ theme, toggle }}>{children}</ThemeCtx.Provider>;
 }
 
@@ -2727,8 +2476,7 @@ function Logo({ className = '' }) {
 }
 
 function Header() {
-  const { route, navigate } = useRouter();
-  const { wallet, setShowConnect } = useWallet();
+  const { route } = useRouter();
   const { theme, toggle: toggleTheme } = useTheme();
   const { lang, toggle: toggleLang, t } = useLang();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -2758,12 +2506,12 @@ function Header() {
                 key={n.key}
                 href={`#${n.path}`}
                 className={cx(
-                  'px-4 py-1.5 text-[13px] tracking-tight transition-colors',
+                  'relative px-4 py-1.5 text-[13px] tracking-tight transition-colors',
                   active ? 'text-bone' : 'text-ash hover:text-bone'
                 )}
               >
                 {n.label}
-                {active && <span className="block h-px bg-brand mt-1 -mx-4"></span>}
+                {active && <span className="absolute left-4 right-4 bottom-0 h-px bg-brand"></span>}
               </a>
             );
           })}
@@ -2793,26 +2541,6 @@ function Header() {
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             )}
           </button>
-          {wallet ? (
-            <button
-              onClick={() => navigate('/wallet')}
-              className="flex items-center gap-2 px-3 py-1.5 border border-ink-500 hover:border-bone transition-colors shrink-0"
-            >
-              <I.wallet className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline num text-[12px]">{wallet.address}</span>
-              <span className="hidden sm:inline text-smoke text-[11px]">·</span>
-              <span className="num text-[12px] text-brand">${wallet.balance.toFixed(2)}</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowConnect(true)}
-              className="btn-brand px-3 sm:px-4 py-1.5 text-[12px] font-medium tracking-tight shrink-0"
-              aria-label={t('header.connect')}
-            >
-              <I.wallet className="w-3.5 h-3.5 sm:hidden"/>
-              <span className="hidden sm:inline">{t('header.connect')}</span>
-            </button>
-          )}
           <button
             onClick={() => setMenuOpen(o => !o)}
             aria-label="menu"
@@ -2905,11 +2633,6 @@ function Footer() {
           </p>
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <span className="micro text-smoke">{t('footer.copyright')}</span>
-            <span className="micro text-smoke flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[10px] tracking-wider uppercase border border-brand/40 text-brand px-2 py-0.5">
-                <I.dot className="w-1.5 h-1.5"/> x402-compatible
-              </span>
-            </span>
           </div>
         </div>
       </div>
@@ -2973,56 +2696,6 @@ function Sparkline({ data, color = 'currentColor', w = 80, h = 22 }) {
   );
 }
 
-function TickerBar() {
-  const { t } = useLang();
-  // Mock x402 payment feed — recent wallet → router payments
-  const feed = useMemo(() => [
-    { addr: '0x7a3F…e9b2',   slug: 'together',   amt: 0.014, ago: '2s ago'  },
-    { addr: 'agent01.eth',   slug: 'portkey',    amt: 0.083, ago: '5s ago'  },
-    { addr: '0x4D21…c0F8',   slug: 'fireworks',  amt: 0.027, ago: '11s ago' },
-    { addr: 'kira.base.eth', slug: 'openrouter', amt: 0.142, ago: '14s ago' },
-    { addr: '0x9B5e…4a17',   slug: 'bai',        amt: 0.018, ago: '22s ago' },
-    { addr: '0xC3a8…d901',   slug: 'together',   amt: 0.236, ago: '29s ago' },
-    { addr: 'router-bot.eth',slug: 'fireworks',  amt: 0.041, ago: '34s ago' },
-    { addr: '0x2E7d…8b44',   slug: 'portkey',    amt: 0.058, ago: '48s ago' },
-    { addr: '0xF1c6…3e2a',   slug: 'anyscale',   amt: 0.092, ago: '1m ago'  },
-    { addr: 'agent42.eth',   slug: 'together',   amt: 0.012, ago: '1m ago'  },
-    { addr: '0x8Ac4…5d39',   slug: 'replicate',  amt: 0.114, ago: '2m ago'  },
-    { addr: 'pact.base.eth', slug: 'openrouter', amt: 0.064, ago: '2m ago'  },
-    { addr: '0x3F2b…7e15',   slug: 'litellm',    amt: 0.008, ago: '3m ago'  },
-    { addr: '0xA9d7…c23e',   slug: 'fireworks',  amt: 0.031, ago: '4m ago'  },
-  ], []);
-  const list = [...feed, ...feed];
-  return (
-    <div className="border-y border-ink-600 bg-ink-800/50 overflow-hidden">
-      <div className="flex items-center">
-        <div className="micro text-smoke px-4 py-2 border-r border-ink-600 shrink-0 flex items-center gap-2 bg-ink">
-          <span className="w-1.5 h-1.5 bg-brand rounded-full pulse-dot"></span>
-          {t('ticker.live')}
-        </div>
-        <div className="overflow-hidden flex-1">
-          <div className="ticker-track flex items-center gap-8 py-2 whitespace-nowrap">
-            {list.map((x, i) => {
-              const provider = PROVIDERS.find(p => p.slug === x.slug);
-              return (
-                <span key={i} className="inline-flex items-center gap-2 text-[12px] shrink-0">
-                  <span className="num text-ash">{x.addr}</span>
-                  <span className="text-smoke">→</span>
-                  <ProviderMark slug={x.slug} size={16}/>
-                  <span className="text-bone">{provider?.name || x.slug}</span>
-                  <span className="num text-brand">${x.amt.toFixed(3)}</span>
-                  <span className="micro text-smoke">{x.ago}</span>
-                  <span className="text-ink-500 ml-2">·</span>
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ===========================================================
    HOME / RANKING
    =========================================================== */
@@ -3031,7 +2704,6 @@ function HomePage() {
   return (
     <Fragment>
       <Hero />
-      <TickerBar />
       <RankingSection />
       <InsightsRail />
     </Fragment>
@@ -3042,84 +2714,34 @@ function Hero() {
   const { t } = useLang();
   const [adj, setAdj] = useState(0);
   const adjs = [
-    { word: t('hero.adjCheapest'),      tone: 'text-brand' },
-    { word: t('hero.adjMostTrusted'),   tone: 'text-amber' },
-    { word: t('hero.adjFastest'),       tone: 'text-sky' },
-    { word: t('hero.adjCryptoNative'),  tone: 'text-bone' },
+    { word: t('hero.adjCheapest'),    tone: 'text-brand' },
+    { word: t('hero.adjMostTrusted'), tone: 'text-amber' },
+    { word: t('hero.adjFastest'),     tone: 'text-sky' },
   ];
   useEffect(() => {
-    const t = setInterval(() => setAdj(a => (a + 1) % adjs.length), 2400);
-    return () => clearInterval(t);
-  }, []);
-
-  // Live wallet-paid volume — tick every ~5s with small mock increments
-  const [volume, setVolume] = useState(HERO_STATS.paymentVolume);
-  const [paidRuns, setPaidRuns] = useState(HERO_STATS.paidRuns24h);
-  useEffect(() => {
-    const id = setInterval(() => {
-      const bump = 0.18 + Math.random() * 0.5;
-      const ranBumped = Math.random() < 0.65;
-      setVolume(v => Math.round((v + bump) * 100) / 100);
-      if (ranBumped) setPaidRuns(r => r + 1);
-    }, 5000);
+    const id = setInterval(() => setAdj(a => (a + 1) % adjs.length), 2400);
     return () => clearInterval(id);
   }, []);
 
   return (
     <section className="relative hero-glow grid-bg">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-20 pb-16 lg:pb-24">
-        <div className="grid md:grid-cols-12 gap-8 md:gap-10">
-          <div className="md:col-span-8">
-            <div className="flex items-center gap-3 micro text-smoke fade-up flex-wrap" style={{ animationDelay: '0s' }}>
-              <span className="w-6 h-px bg-brand"></span>
-              <span>{t('hero.issue')}</span>
-              <span className="hidden sm:inline w-6 h-px bg-rule-2"></span>
-              <span className="hidden sm:inline text-ash">{t('hero.preface')}</span>
-            </div>
-            <h1 className="mt-6 serif leading-[0.92] tracking-editorial fade-up" style={{ animationDelay: '0.05s', fontSize: 'clamp(48px, 9vw, 112px)' }}>
-              {t('hero.findThe')}<br />
-              <span className={cx('serif-it transition-colors duration-500 inline-block', adjs[adj].tone)}>
-                {adjs[adj].word}
-              </span><br />
-              <span className="text-bone">{t('hero.aiRouter')}</span>
-            </h1>
-            <p className="mt-6 sm:mt-8 max-w-2xl text-ash text-base sm:text-lg leading-relaxed fade-up" style={{ animationDelay: '0.1s' }}>
-              {t('hero.subhead1')}<br className="hidden sm:inline"/>
-              <span className="text-smoke">{t('hero.subhead2')}</span>
-            </p>
-            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row sm:items-center gap-3 fade-up" style={{ animationDelay: '0.15s' }}>
-              <a href="#/run" className="btn-brand px-5 py-3 text-sm font-medium tracking-tight inline-flex items-center gap-2 justify-center sm:justify-start">
-                {t('hero.openRun')} <I.arrow className="w-4 h-4" />
-              </a>
-              <span className="hidden lg:inline-flex micro text-smoke ml-3">
-                <span className="kbd mr-2">⌘</span> <span className="kbd">K</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="md:col-span-4 fade-up" style={{ animationDelay: '0.2s' }}>
-            <div className="card p-6 relative">
-              <div className="micro text-smoke mb-4 flex items-center justify-between">
-                <span>{t('hero.liveSignal')}</span>
-                <span className="num text-ash text-[10px]">14:04:21Z</span>
-              </div>
-              <div className="space-y-5">
-                <Stat live label={t('hero.walletPaid24h')} value={fmtMoney(volume)} sub={t('hero.paidRunsX402', { n: paidRuns.toLocaleString() })} tone="brand"/>
-                <Stat label={t('hero.activeRouters')} value={String(HERO_STATS.activeRouters)} sub={t('hero.cryptoRailsSub', { n: HERO_STATS.cryptoCount })} />
-                <Stat label={t('hero.costVariance')} value={`${HERO_STATS.variance}%`} sub={t('hero.costVarianceSub')} tone="amber" />
-                <Stat label={t('hero.driftEvents')} value={String(HERO_STATS.driftTotal)} sub={t('hero.driftSub', { n: HERO_STATS.driftMedium })} tone="amber" />
-                <Stat label={t('hero.sampledRequests')} value={HERO_STATS.totalSamples.toLocaleString()} sub={t('hero.acrossModels', { n: MODELS.length })} />
-              </div>
-              <div className="absolute inset-0 pointer-events-none">
-                <svg className="absolute -top-px left-0 right-0" height="2" width="100%">
-                  <line x1="0" y1="1" x2="100%" y2="1" stroke="var(--brand)" strokeWidth="1" strokeDasharray="2 4" opacity="0.4"/>
-                </svg>
-              </div>
-            </div>
-            <div className="mt-6 text-[13px] text-smoke leading-relaxed">
-              <span className="serif-it text-bone text-base">{t('hero.quote')}</span>
-              <div className="mt-2 micro">{t('hero.quoteAttr')}</div>
-            </div>
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-28 pb-20 lg:pb-28">
+        <div className="max-w-5xl mx-auto text-center">
+          <h1 className="serif leading-[0.92] tracking-editorial fade-up" style={{ animationDelay: '0.05s', fontSize: 'clamp(48px, 9vw, 112px)' }}>
+            {t('hero.findThe')}<br />
+            <span className={cx('serif-it transition-colors duration-500 inline-block', adjs[adj].tone)}>
+              {adjs[adj].word}
+            </span><br />
+            <span className="text-bone">{t('hero.aiRouter')}</span>
+          </h1>
+          <p className="mt-8 sm:mt-10 max-w-2xl mx-auto text-ash text-base sm:text-lg leading-relaxed fade-up" style={{ animationDelay: '0.1s' }}>
+            {t('hero.subhead1')}<br className="hidden sm:inline"/>
+            <span className="text-smoke">{t('hero.subhead2')}</span>
+          </p>
+          <div className="mt-10 sm:mt-12 flex justify-center fade-up" style={{ animationDelay: '0.15s' }}>
+            <a href="#/run" className="btn-brand px-6 py-3 text-sm font-medium tracking-tight inline-flex items-center gap-2">
+              {t('hero.openRun')} <I.arrow className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </div>
@@ -3147,13 +2769,11 @@ function RankingSection() {
   const { t } = useLang();
   const [model, setModel] = useState('openai/gpt-5.5');
   const [sort, setSort] = useState('overall');
-  const [crypto, setCrypto] = useState(false);
   const [region, setRegion] = useState('all');
   const [window, setWindow] = useState('24h');
   const [lastRefresh, setLastRefresh] = useState(() => Date.now() - 8 * 60 * 1000);
   const [refreshing, setRefreshing] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const [setupTarget, setSetupTarget] = useState(null);
 
   // Tick every 30s so the "Xm ago" text stays fresh.
   useEffect(() => {
@@ -3184,17 +2804,15 @@ function RankingSection() {
 
   const filtered = useMemo(() => {
     let data = [...PROVIDERS];
-    if (crypto) data = data.filter(p => p.crypto);
     if (region !== 'all') data = data.filter(p => p.region.toLowerCase().includes(region));
     const sortKey = {
       overall: (a, b) => b.overall - a.overall,
       cost: (a, b) => a.cost - b.cost,
       trust: (a, b) => b.trust - a.trust,
       latency: (a, b) => a.latency - b.latency,
-      volume: (a, b) => b.volume7d - a.volume7d,
     }[sort];
     return data.sort(sortKey);
-  }, [model, sort, crypto, region]);
+  }, [model, sort, region]);
 
   const insight = useMemo(() => {
     if (!filtered.length) return null;
@@ -3239,10 +2857,6 @@ function RankingSection() {
             <Dropdown label={t('ranking.labelModel')} value={MODELS.find(m=>m.id===model).display} options={MODELS.map(m=>({v:m.id,l:m.display}))} onChange={setModel}/>
             <Dropdown label={t('ranking.labelRegion')} value={region==='all' ? t('ranking.regionAll') : region.toUpperCase()} options={[{v:'all',l:t('ranking.regionAll')},{v:'us',l:'US'},{v:'eu',l:'EU'},{v:'global',l:'Global'}]} onChange={setRegion}/>
             <Dropdown label={t('ranking.labelAsOf')} value={t('ranking.windowLast' + ({'1h':'1h','24h':'24h','7d':'7d','30d':'30d'}[window]))} options={[{v:'1h',l:t('ranking.windowLast1h')},{v:'24h',l:t('ranking.windowLast24h')},{v:'7d',l:t('ranking.windowLast7d')},{v:'30d',l:t('ranking.windowLast30d')}]} onChange={setWindow}/>
-            <button onClick={()=>setCrypto(!crypto)} className={cx('flex items-center gap-2 px-3 py-1.5 text-[12px] border transition-colors', crypto ? 'border-brand text-brand' : 'border-ink-500 text-ash hover:text-bone')}>
-              <span className={cx('check', crypto && 'on')}>{crypto && <I.check className="w-2.5 h-2.5 text-ink"/>}</span>
-              {t('ranking.cryptoOnly')}
-            </button>
           </div>
           <div className="flex items-center gap-1 overflow-x-auto no-scroll-x -mx-4 px-4 sm:-mx-0 sm:px-0">
             <span className="micro text-smoke mr-3 shrink-0">{t('ranking.sortLabel')}</span>
@@ -3250,7 +2864,6 @@ function RankingSection() {
               { v: 'cost', l: t('ranking.sortCheapest') },
               { v: 'latency', l: t('ranking.sortFastest') },
               { v: 'trust', l: t('ranking.sortMostTrusted') },
-              { v: 'volume', l: t('ranking.sortHighestVolume') },
               { v: 'overall', l: t('ranking.sortBestOverall') },
             ].map(s => (
               <button
@@ -3270,18 +2883,17 @@ function RankingSection() {
         'border-x border-b border-ink-600 -mx-4 sm:-mx-6 lg:-mx-8 transition-opacity duration-300',
         refreshing && 'opacity-50 pointer-events-none'
       )}>
-        <div className="hidden lg:grid grid-cols-[64px_2fr_1.4fr_1.2fr_140px_1fr_1fr_160px] px-8 py-3 micro text-smoke border-b border-ink-600 bg-ink-800/30">
+        <div className="hidden lg:grid grid-cols-[64px_2fr_1.6fr_1.4fr_1.2fr_1.2fr_160px] px-8 py-3 micro text-smoke border-b border-ink-600 bg-ink-800/30">
           <div>{t('ranking.thRank')}</div>
           <div>{t('ranking.thProvider')}</div>
           <div>{t('ranking.thCost')}</div>
           <div>{t('ranking.thScore')}</div>
-          <div>{t('ranking.thVolume')}</div>
           <div>{t('ranking.thSuccess')}</div>
           <div>{t('ranking.thLatency')}</div>
           <div className="text-right">{t('ranking.thAction')}</div>
         </div>
         {filtered.map((p, i) => (
-          <RankingRow key={p.slug} p={p} rank={i+1} cheapest={cheapest} fastest={fastest} trusted={trusted} onSetup={setSetupTarget}/>
+          <RankingRow key={p.slug} p={p} rank={i+1} cheapest={cheapest} fastest={fastest} trusted={trusted}/>
         ))}
       </div>
 
@@ -3300,20 +2912,19 @@ function RankingSection() {
       ) : (
         <div className="-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 border-b border-ink-600 bg-ink-800/30 text-center">
           <div className="serif-it text-3xl text-ash">{t('ranking.noProviders')}</div>
-          <button onClick={()=>{setCrypto(false); setRegion('all');}} className="mt-3 micro text-brand hover:underline">{t('ranking.resetFilters')}</button>
+          <button onClick={()=>setRegion('all')} className="mt-3 micro text-brand hover:underline">{t('ranking.resetFilters')}</button>
         </div>
       )}
-      {setupTarget && <SetupPromptModal provider={setupTarget} onClose={() => setSetupTarget(null)}/>}
     </section>
   );
 }
 
-function RankingRow({ p, rank, cheapest, fastest, trusted, onSetup }) {
+function RankingRow({ p, rank, cheapest, fastest, trusted }) {
   const { t } = useLang();
   return (
     <Fragment>
       {/* Desktop layout — grid */}
-      <div className="hidden lg:grid rank-row row-hover grid-cols-[64px_2fr_1.4fr_1.2fr_140px_1fr_1fr_160px] px-8 py-5 items-center group fade-up">
+      <div className="hidden lg:grid rank-row row-hover grid-cols-[64px_2fr_1.6fr_1.4fr_1.2fr_1.2fr_160px] px-8 py-5 items-center group fade-up">
         <div>
           <div className="serif-it text-3xl text-ash group-hover:text-brand transition-colors">{rank}</div>
         </div>
@@ -3324,11 +2935,6 @@ function RankingRow({ p, rank, cheapest, fastest, trusted, onSetup }) {
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-bone tracking-tight">{p.name}</span>
-                  {p.crypto && (
-                    <span className="inline-flex items-center gap-1 text-[10px] tracking-wider uppercase border border-sky/40 text-sky px-1.5 py-0.5">
-                      <I.dot className="w-1.5 h-1.5"/> {t('ranking.rowCryptoTag')}
-                    </span>
-                  )}
                 </div>
                 <div className="micro text-smoke mt-0.5">{p.type} · {p.region}</div>
               </div>
@@ -3344,10 +2950,6 @@ function RankingRow({ p, rank, cheapest, fastest, trusted, onSetup }) {
             <TierChip tier={p.tier}/>
           </div>
         </div>
-        <div>
-          <div className="num text-[13px] text-bone">{fmtMoney(p.volume7d, 0)}</div>
-          <div className="micro text-smoke mt-0.5">via x402</div>
-        </div>
         <div className="num text-[13px]">
           <span className={p.success >= 0.99 ? 'text-brand' : p.success >= 0.97 ? 'text-bone' : 'text-amber'}>
             {fmtPct(p.success, 1)}
@@ -3359,13 +2961,6 @@ function RankingRow({ p, rank, cheapest, fastest, trusted, onSetup }) {
           <span className="text-ash">{p.p95.toFixed(1)}s</span>
         </div>
         <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => onSetup && onSetup(p)}
-            title={t('ranking.rowSetupTip')}
-            className="btn-ghost px-2 py-1.5 text-[12px] inline-flex items-center"
-          >
-            <I.bolt className="w-3.5 h-3.5"/>
-          </button>
           <a href={`#/run?provider=${p.slug}`} className="btn-brand px-3 py-1.5 text-[12px] font-medium inline-flex items-center gap-1">
             {t('ranking.rowRun')} <I.arrow className="w-3 h-3"/>
           </a>
@@ -3380,11 +2975,6 @@ function RankingRow({ p, rank, cheapest, fastest, trusted, onSetup }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-bone tracking-tight text-[15px] truncate">{p.name}</span>
-              {p.crypto && (
-                <span className="inline-flex items-center gap-1 text-[10px] tracking-wider uppercase border border-sky/40 text-sky px-1.5 py-0.5">
-                  <I.dot className="w-1.5 h-1.5"/> {t('ranking.rowCryptoTag')}
-                </span>
-              )}
             </div>
             <div className="micro text-smoke mt-0.5 truncate">{p.type} · {p.region}</div>
           </div>
@@ -3415,18 +3005,8 @@ function RankingRow({ p, rank, cheapest, fastest, trusted, onSetup }) {
               {fmtPct(p.success, 1)}
             </div>
           </div>
-          <div className="bg-ink p-3 col-span-2 flex items-baseline justify-between">
-            <div className="micro text-smoke">{t('ranking.mob7dVolX402')}</div>
-            <div className="num text-[14px] text-bone">{fmtMoney(p.volume7d, 0)}</div>
-          </div>
         </div>
         <div className="mt-3 flex items-center gap-2">
-          <button
-            onClick={() => onSetup && onSetup(p)}
-            className="btn-ghost flex-1 text-center px-3 py-2 text-[12px] inline-flex items-center justify-center gap-1.5"
-          >
-            <I.bolt className="w-3.5 h-3.5"/> {t('ranking.rowSetUp')}
-          </button>
           <a href={`#/run?provider=${p.slug}`} className="btn-brand flex-1 text-center px-3 py-2 text-[12px] font-medium inline-flex items-center justify-center gap-1">
             {t('ranking.rowRun')} <I.arrow className="w-3 h-3"/>
           </a>
@@ -3612,7 +3192,7 @@ function InsightsRail() {
   const { t } = useLang();
   return (
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-32">
-      <div className="grid md:grid-cols-3 gap-px bg-ink-600">
+      <div className="grid md:grid-cols-2 gap-px bg-ink-600">
         <Insight
           tag={t('insights.costTag')}
           title={t('insights.costTitle')}
@@ -3624,12 +3204,6 @@ function InsightsRail() {
           title={t('insights.trustTitle')}
           body={t('insights.trustBody')}
           stat={{ label: t('insights.trustStat'), value: '6.2%', tone: 'coral' }}
-        />
-        <Insight
-          tag={t('insights.payTag')}
-          title={t('insights.payTitle')}
-          body={t('insights.payBody')}
-          stat={{ label: t('insights.payStat'), value: '38%', tone: 'brand' }}
         />
       </div>
     </section>
@@ -3659,7 +3233,6 @@ function RunPage() {
   const { t } = useLang();
   const { route } = useRouter();
   const toast = useToast();
-  const { wallet, setShowConnect } = useWallet();
 
   // URL params decide initial selection:
   //   ?provider=X        → single (1 selected)
@@ -3675,23 +3248,19 @@ function RunPage() {
     if (single) return [single];
     if (multi.length >= 2) return multi.slice(0, 5);
     if (multi.length === 1) return multi;
-    return ['portkey', 'openrouter', 'bai', 'together'];
+    return [];
   }, []);
 
-  const [promptMode, setPromptMode] = useState('single'); // single | system_user
-  const [systemPrompt, setSystemPrompt] = useState('You are a precise technical writer. Be concrete and avoid filler.');
   const [prompt, setPrompt] = useState('Explain account abstraction in simple terms. Cover ERC-4337, paymasters, and trade-offs.');
   const [model, setModel] = useState('openai/gpt-5.5');
   const [selected, setSelected] = useState(initialSelected);
   const [temperature, setTemperature] = useState(0);
   const [maxTokens, setMaxTokens] = useState(1024);
-  const [fallback, setFallback] = useState(false);
   const [run, setRun] = useState(null);
   const [history, setHistory] = useState([]);
-  const [payTarget, setPayTarget] = useState(null);
   const promptRef = useRef(null);
 
-  const fullPrompt = promptMode === 'system_user' ? `${systemPrompt}\n\n${prompt}` : prompt;
+  const fullPrompt = prompt;
 
   // Estimated cost: depends on prompt length × selected providers' avg cost
   const estimatedCost = useMemo(() => {
@@ -3766,7 +3335,7 @@ function RunPage() {
     return [t1, t2];
   };
 
-  const start = () => {
+  const doStart = () => {
     if (selected.length < 1 || !prompt) return;
     const id = 'run_' + Math.random().toString(36).slice(2, 9);
     const modelObj = MODELS.find(m => m.id === model);
@@ -3782,6 +3351,11 @@ function RunPage() {
     });
   };
 
+  const start = () => {
+    if (selected.length < 1 || !prompt) return;
+    doStart();
+  };
+
   const retry = (slug) => {
     if (!run) return;
     setRun(prev => ({
@@ -3790,15 +3364,34 @@ function RunPage() {
     }));
   };
 
-  // Launch any pending providers for the current run
+  // Launch pending providers — uses a ref-based registry so the
+  // in-flight completion timers aren't clobbered when a sibling provider
+  // flips to "running" and triggers a re-render.
+  const launchedRef = useRef({});
   useEffect(() => {
     if (!run) return;
-    const pending = run.providers.filter(r => r.status === 'pending');
-    if (pending.length === 0) return;
-    const timers = [];
-    pending.forEach((r, i) => { timers.push(...launchOne(r.slug, run.id, i)); });
-    return () => timers.forEach(clearTimeout);
+    run.providers.forEach((r, i) => {
+      if (r.status !== 'pending') return;
+      const key = run.id + ':' + r.slug;
+      // Retry case: clear any prior (already-fired) timers, schedule fresh.
+      if (launchedRef.current[key]) {
+        launchedRef.current[key].forEach(clearTimeout);
+      }
+      launchedRef.current[key] = launchOne(r.slug, run.id, i);
+    });
+    // No cleanup here — letting timers run to completion. Stale timers
+    // from a discarded run are harmless because launchOne checks
+    // `prev.id === runId` before mutating state.
   }, [run?.id, run?.providers.map(r => r.slug + r.status).join('|')]);
+
+  // When the run.id changes (new comparison) or component unmounts,
+  // clear every outstanding timer.
+  useEffect(() => {
+    return () => {
+      Object.values(launchedRef.current).forEach(arr => arr.forEach(clearTimeout));
+      launchedRef.current = {};
+    };
+  }, [run?.id]);
 
   // Record completed runs in history (once per run.id)
   const recordedRuns = useRef(new Set());
@@ -3830,7 +3423,7 @@ function RunPage() {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [prompt, selected, systemPrompt, promptMode, run, allDone]);
+  }, [prompt, selected, run, allDone]);
 
   return (
     <Fragment>
@@ -3869,39 +3462,7 @@ function RunPage() {
         {/* SETUP PANEL */}
         <div className="bg-ink p-5 sm:p-6 lg:p-8 space-y-8">
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="micro text-smoke">{t('run.labelPrompt')}</div>
-              <div className="flex gap-0.5 border border-ink-500">
-                {[
-                  { v: 'single', l: t('run.modeSingle') },
-                  { v: 'system_user', l: t('run.modeSysUser') },
-                ].map(m => (
-                  <button
-                    key={m.v}
-                    onClick={()=>setPromptMode(m.v)}
-                    className={cx('px-2.5 py-1 text-[10px] tracking-wider uppercase transition-colors',
-                      promptMode === m.v ? 'bg-brand text-ink' : 'text-smoke hover:text-bone')}
-                  >
-                    {m.l}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {promptMode === 'system_user' && (
-              <Fragment>
-                <div className="micro text-smoke mb-1.5">{t('run.labelSystem')}</div>
-                <textarea
-                  value={systemPrompt}
-                  onChange={e=>setSystemPrompt(e.target.value)}
-                  rows={2}
-                  className="w-full bg-ink-800 border border-ink-500 focus:border-brand/60 outline-none p-3 text-[12px] resize-none text-ash leading-relaxed mb-2"
-                  placeholder={t('run.sysPlaceholder')}
-                />
-                <div className="micro text-smoke mb-1.5">{t('run.labelUser')}</div>
-              </Fragment>
-            )}
-
+            <div className="micro text-smoke mb-3">{t('run.labelPrompt')}</div>
             <textarea
               ref={promptRef}
               value={prompt}
@@ -3919,11 +3480,12 @@ function RunPage() {
               <div className="micro text-smoke mb-2">{t('run.samplesLabel')}</div>
               <div className="flex flex-wrap gap-1.5">
                 {BENCHMARK_TEMPLATES.map(tpl => {
-                  const active = prompt.trim() === tpl.prompt.trim();
+                  const localizedPrompt = t('run.tplPrompts.' + tpl.id) || tpl.prompt;
+                  const active = prompt.trim() === localizedPrompt.trim();
                   return (
                     <button
                       key={tpl.id}
-                      onClick={() => setPrompt(tpl.prompt)}
+                      onClick={() => setPrompt(localizedPrompt)}
                       className={cx(
                         'px-2.5 py-1 text-[11px] border transition-colors',
                         active
@@ -3942,6 +3504,18 @@ function RunPage() {
           <Section label={t('run.labelModel')}>
             <ModelDropdown value={model} onChange={setModel}/>
             <div className="mt-2 micro text-smoke">{t('run.modelSupportCount', { n: PROVIDERS.length })}</div>
+            <div className="mt-4 pt-4 border-t border-ink-600 space-y-4 text-[12px]">
+              <div className="grid grid-cols-[88px_1fr_56px] items-center gap-3">
+                <span className="text-ash">{t('run.temperature')}</span>
+                <RangeInput min={0} max={2} step={0.1} value={temperature} onChange={setTemperature}/>
+                <span className="num text-bone text-right">{temperature.toFixed(1)}</span>
+              </div>
+              <div className="grid grid-cols-[88px_1fr_56px] items-center gap-3">
+                <span className="text-ash">{t('run.maxTokens')}</span>
+                <RangeInput min={128} max={4096} step={128} value={maxTokens} onChange={setMaxTokens}/>
+                <span className="num text-bone text-right">{maxTokens}</span>
+              </div>
+            </div>
           </Section>
 
           <Section label={t('run.labelProviders')}>
@@ -3949,6 +3523,7 @@ function RunPage() {
               <span>{t('run.selectedCount', { n: selected.length })}</span>
               {selected.length >= 2 && <span className="text-ash">{t('run.compareMode')}</span>}
               {selected.length === 1 && <span className="text-ash">{t('run.singleMode')}</span>}
+              {selected.length === 0 && <span className="text-amber">{t('run.pickAtLeast1')}</span>}
             </div>
             <div className="space-y-1">
               {PROVIDERS.map(p => {
@@ -3958,10 +3533,6 @@ function RunPage() {
                     key={p.slug}
                     onClick={() => {
                       if (on) {
-                        if (selected.length === 1) {
-                          toast.show(t('run.keepAtLeast1'));
-                          return;
-                        }
                         setSelected(selected.filter(x => x !== p.slug));
                       } else if (selected.length < 5) {
                         setSelected([...selected, p.slug]);
@@ -3990,31 +3561,6 @@ function RunPage() {
             </div>
           </Section>
 
-          <Section label={t('run.labelAdvanced')}>
-            <div className="space-y-4 text-[12px]">
-              <div className="grid grid-cols-[88px_1fr_56px] items-center gap-3">
-                <span className="text-ash">{t('run.temperature')}</span>
-                <RangeInput min={0} max={2} step={0.1} value={temperature} onChange={setTemperature}/>
-                <span className="num text-bone text-right">{temperature.toFixed(1)}</span>
-              </div>
-              <div className="grid grid-cols-[88px_1fr_56px] items-center gap-3">
-                <span className="text-ash">{t('run.maxTokens')}</span>
-                <RangeInput min={128} max={4096} step={128} value={maxTokens} onChange={setMaxTokens}/>
-                <span className="num text-bone text-right">{maxTokens}</span>
-              </div>
-              <button onClick={()=>setFallback(!fallback)} className="w-full flex items-center justify-between border-t border-ink-600 pt-3">
-                <span className="text-ash">{t('run.allowFallback')}</span>
-                <span className={cx('check', fallback && 'on')}>{fallback && <I.check className="w-2.5 h-2.5 text-ink"/>}</span>
-              </button>
-              {!fallback && (
-                <div className="text-amber/80 text-[11px] flex gap-2 leading-relaxed">
-                  <I.alert className="w-3 h-3 mt-0.5 shrink-0"/>
-                  {t('run.fallbackOff')}
-                </div>
-              )}
-            </div>
-          </Section>
-
           <button
             onClick={start}
             disabled={!prompt || selected.length < 1 || (run && !allDone)}
@@ -4024,8 +3570,8 @@ function RunPage() {
             {run && !allDone
               ? t('run.btnRunning')
               : run
-                ? (selected.length === 1 ? t('run.btnRerun') : t('run.btnRerunCompare'))
-                : (selected.length === 1 ? t('run.btnRun') : t('run.btnRunCompare'))}
+                ? (selected.length >= 2 ? t('run.btnRerunCompare') : t('run.btnRerun'))
+                : (selected.length >= 2 ? t('run.btnRunCompare') : t('run.btnRun'))}
           </button>
           <div className="flex items-center justify-between micro text-smoke">
             <span>{t('run.estimatedCost')}</span>
@@ -4038,24 +3584,19 @@ function RunPage() {
           {!run ? (
             <EmptyRun mode={selected.length === 1 ? 'single' : 'compare'}/>
           ) : selected.length === 1 ? (
-            <SingleProviderResult
-              run={run}
-              wallet={wallet}
-              onPay={() => {
-                const r = run.providers[0];
-                if (!r || r.status !== 'completed') return;
-                if (!wallet) { setShowConnect(true); return; }
-                const p = PROVIDERS.find(x => x.slug === r.slug);
-                setPayTarget({ provider: p, cost: r.cost });
-              }}
-            />
+            <SingleProviderResult run={run}/>
           ) : (
             <div className="space-y-10">
               <RunStatusList run={run} onRetry={retry}/>
+              {/* ResponseGrid renders progressively — pending/running/done
+                   cards all appear together so faster routers stream while
+                   slower ones are still loading. */}
+              {run.providers.some(r => r.status !== 'pending') && (
+                <ResponseGrid run={run}/>
+              )}
               {allDone && completed.length >= 1 && (
                 <Fragment>
                   <SummaryCards run={run}/>
-                  <ResponseGrid run={run}/>
                   <EvaluationTable run={run}/>
                   <DifferenceAnalysis run={run}/>
                   <RecommendedAction run={run}/>
@@ -4075,8 +3616,6 @@ function RunPage() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}/>
       )}
-
-      {payTarget && <PaymentModal provider={payTarget.provider} cost={payTarget.cost} onClose={() => setPayTarget(null)}/>}
     </Fragment>
   );
 }
@@ -4116,7 +3655,7 @@ function EmptyRun({ mode }) {
   );
 }
 
-function SingleProviderResult({ run, wallet, onPay }) {
+function SingleProviderResult({ run }) {
   const { t } = useLang();
   const r = run.providers[0];
   const p = PROVIDERS.find(x => x.slug === r.slug);
@@ -4216,20 +3755,11 @@ function SingleProviderResult({ run, wallet, onPay }) {
             <div className="num text-bone text-[14px] mt-1">{p.trust}</div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {cheaperAlt && (
-            <span className="text-[12px] text-amber hidden sm:inline">
-              {t('run.cheaperLabel')} <span className="text-brand">{cheaperAlt.provider.name} (−{cheaperAlt.savings}%)</span>
-            </span>
-          )}
-          <button
-            onClick={onPay}
-            disabled={r.status !== 'completed'}
-            className="btn-brand px-4 py-2 text-[12px] font-medium inline-flex items-center gap-2 disabled:opacity-40"
-          >
-            <I.wallet className="w-4 h-4"/> {t('run.runWithWallet')}
-          </button>
-        </div>
+        {cheaperAlt && (
+          <span className="text-[12px] text-amber">
+            {t('run.cheaperLabel')} <span className="text-brand">{cheaperAlt.provider.name} (−{cheaperAlt.savings}%)</span>
+          </span>
+        )}
       </div>
     </div>
   );
@@ -4426,13 +3956,32 @@ function SumCard({ tag, name, value, sub, tone, slug, highlight }) {
   );
 }
 
+// Per-card response body in compare mode. Streams the text in like an LLM
+// (token-by-token via useStreamingText) and shows a blinking cursor while
+// not yet finished. Each card runs its own stream so providers that finish
+// later visibly stream after providers that finished early.
+function StreamingCardBody({ text, isExpanded }) {
+  const stream = useStreamingText(text || '', 16);
+  return (
+    <div className={cx(
+      'mt-3 flex-1 text-[12px] leading-relaxed text-ash whitespace-pre-wrap font-mono overflow-y-auto pr-2',
+      isExpanded ? '' : 'max-h-[260px] gradient-mask-bottom'
+    )}>
+      {stream.shown}
+      {!stream.done && text && (
+        <span className="inline-block w-1.5 h-3 bg-brand ml-0.5 align-middle pulse-dot"/>
+      )}
+    </div>
+  );
+}
+
 function ResponseGrid({ run }) {
   const { t } = useLang();
-  const visible = run.providers.filter(r => r.status === 'completed' || r.status === 'failed');
+  // Render every selected provider — pending/running/completed/failed —
+  // so faster routers visibly stream while slower ones still load.
+  const visible = run.providers;
   const [expanded, setExpanded] = useState({});
-  const [payTarget, setPayTarget] = useState(null);
   const toast = useToast();
-  const { wallet, setShowConnect } = useWallet();
 
   const colCount = Math.min(visible.length, 4);
   const colCls = colCount === 1 ? 'md:grid-cols-1' :
@@ -4488,37 +4037,56 @@ function ResponseGrid({ run }) {
                   <div className="num text-bone">{r.outputTokens || '—'}</div>
                 </div>
               </div>
-              <div className={cx(
-                'mt-3 flex-1 text-[12px] leading-relaxed text-ash whitespace-pre-wrap font-mono overflow-y-auto pr-2',
-                isExpanded ? '' : 'max-h-[260px] gradient-mask-bottom'
-              )}>
-                {r.status === 'failed' ? (
+              {r.status === 'failed' ? (
+                <div className="mt-3 flex-1 text-[12px] leading-relaxed font-mono pr-2 max-h-[260px] overflow-y-auto">
                   <div className="text-coral">
                     <I.x className="w-4 h-4 inline mb-1 mr-1"/>
                     {t('run.failedPrefix')}{r.error}
                   </div>
-                ) : (
-                  r.response
-                )}
-              </div>
+                </div>
+              ) : r.status === 'pending' ? (
+                <div className="mt-3 flex-1 min-h-[120px] flex items-center justify-center text-[11px] text-smoke">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-smoke rounded-full"/>
+                    {t('run.phaseQueuedShort')}
+                  </span>
+                </div>
+              ) : r.status === 'running' ? (
+                <div className="mt-3 flex-1 min-h-[120px] space-y-2 text-[12px]">
+                  <div className="micro text-brand flex items-center gap-2 mb-2">
+                    <I.spin className="w-3 h-3 animate-spin"/>
+                    {t('run.connectingTo', { name: p.name })}
+                  </div>
+                  <div className="shimmer h-3 w-2/3"></div>
+                  <div className="shimmer h-3 w-3/4"></div>
+                  <div className="shimmer h-3 w-1/2"></div>
+                  <div className="shimmer h-3 w-3/5"></div>
+                </div>
+              ) : (
+                <StreamingCardBody text={r.response} isExpanded={isExpanded}/>
+              )}
               <div className="mt-3 pt-3 border-t border-ink-600 flex items-center justify-between">
                 <TrustBadge score={p.trust}/>
-                {r.status === 'completed' ? (
-                  <button
-                    onClick={() => wallet ? setPayTarget({ provider: p, cost: r.cost }) : setShowConnect(true)}
-                    className="btn-brand px-3 py-1 text-[11px] font-medium inline-flex items-center gap-1"
-                  >
-                    <I.wallet className="w-3 h-3"/> {t('run.useThis')}
-                  </button>
-                ) : (
+                {r.status === 'failed' ? (
                   <span className="text-[10px] text-coral micro">{t('run.phaseFailed')}</span>
+                ) : r.status === 'running' ? (
+                  <span className="text-[10px] text-brand micro flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-brand rounded-full pulse-dot"/>
+                    {t('run.phaseStreaming')}
+                  </span>
+                ) : r.status === 'completed' ? (
+                  <span className="text-[10px] text-brand micro flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-brand rounded-full"/>
+                    {t('run.phaseComplete')}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-smoke micro">{t('run.phaseQueued')}</span>
                 )}
               </div>
             </div>
           );
         })}
       </div>
-      {payTarget && <PaymentModal provider={payTarget.provider} cost={payTarget.cost} onClose={()=>setPayTarget(null)}/>}
     </div>
   );
 }
@@ -4681,8 +4249,6 @@ function DifferenceAnalysis({ run }) {
 
 function RecommendedAction({ run }) {
   const { t } = useLang();
-  const { wallet, setShowConnect } = useWallet();
-  const [payTarget, setPayTarget] = useState(null);
   const completed = run.providers.filter(r => r.status === 'completed' && r.scores);
   if (!completed.length) return null;
 
@@ -4698,57 +4264,49 @@ function RecommendedAction({ run }) {
   const cheapP = PROVIDERS.find(p=>p.slug===cheapest.slug);
   const trustP = PROVIDERS.find(p=>p.slug===trusted.slug);
 
-  const pay = (provider, cost) => {
-    if (!wallet) setShowConnect(true);
-    else setPayTarget({ provider, cost });
-  };
-
   const isSame = (p) => p.slug === recP.slug;
 
   return (
-    <Fragment>
-      <div className="card-2 p-8 ring-1 ring-brand/30 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-brand"></div>
-        <div className="grid md:grid-cols-[1fr_auto] gap-8 items-end">
-          <div>
-            <div className="micro text-smoke">{t('run.verdict')}</div>
-            <h3 className="serif text-3xl sm:text-4xl lg:text-5xl tracking-editorial mt-2">
-              {t('run.useHeadline')} <span className="serif-it text-brand">{recP.name}</span>.
-            </h3>
-            <p className="mt-3 text-ash text-[14px] max-w-xl leading-relaxed">
-              {t('run.useBody')} <span className="num text-bone">{recommended.scores.overall}</span>{t('run.useEstCost')} <span className="num text-bone">{fmtUSD(recommended.cost, 4)}</span>{t('run.useTrailer')}
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 min-w-[260px]">
-            <button
-              onClick={() => pay(recP, recommended.cost)}
-              className="btn-brand px-6 py-3 text-sm font-medium tracking-tight inline-flex items-center gap-2 justify-center"
+    <div className="card-2 p-8 ring-1 ring-brand/30 relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-brand"></div>
+      <div className="grid md:grid-cols-[1fr_auto] gap-8 items-end">
+        <div>
+          <div className="micro text-smoke">{t('run.verdict')}</div>
+          <h3 className="serif text-3xl sm:text-4xl lg:text-5xl tracking-editorial mt-2">
+            {t('run.useHeadline')} <span className="serif-it text-brand">{recP.name}</span>.
+          </h3>
+          <p className="mt-3 text-ash text-[14px] max-w-xl leading-relaxed">
+            {t('run.useBody')} <span className="num text-bone">{recommended.scores.overall}</span>{t('run.useEstCost')} <span className="num text-bone">{fmtUSD(recommended.cost, 4)}</span>{t('run.useTrailer')}
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 min-w-[260px]">
+          <a
+            href={`#/providers/${recP.slug}`}
+            className="btn-brand px-6 py-3 text-sm font-medium tracking-tight inline-flex items-center gap-2 justify-center"
+          >
+            {t('run.useHeadline')} {recP.name} <I.arrow className="w-4 h-4"/>
+          </a>
+          {!isSame(cheapP) && (
+            <a
+              href={`#/providers/${cheapP.slug}`}
+              className="btn-ghost px-6 py-2 text-[12px] inline-flex items-center justify-between gap-3"
             >
-              <I.wallet className="w-4 h-4"/> {t('run.payAndRun', { name: recP.name })}
-            </button>
-            {!isSame(cheapP) && (
-              <button
-                onClick={() => pay(cheapP, cheapest.cost)}
-                className="btn-ghost px-6 py-2 text-[12px] inline-flex items-center justify-between gap-3"
-              >
-                <span>{t('run.useCheapestPick', { name: cheapP.name })}</span>
-                <span className="num text-brand">{fmtUSD(cheapest.cost, 4)}</span>
-              </button>
-            )}
-            {!isSame(trustP) && (
-              <button
-                onClick={() => pay(trustP, trusted.cost)}
-                className="btn-ghost px-6 py-2 text-[12px] inline-flex items-center justify-between gap-3"
-              >
-                <span>{t('run.useTrustedPick', { name: trustP.name })}</span>
-                <span className="num text-amber">{trustP.trust}</span>
-              </button>
-            )}
-          </div>
+              <span>{t('run.useCheapestPick', { name: cheapP.name })}</span>
+              <span className="num text-brand">{fmtUSD(cheapest.cost, 4)}</span>
+            </a>
+          )}
+          {!isSame(trustP) && (
+            <a
+              href={`#/providers/${trustP.slug}`}
+              className="btn-ghost px-6 py-2 text-[12px] inline-flex items-center justify-between gap-3"
+            >
+              <span>{t('run.useTrustedPick', { name: trustP.name })}</span>
+              <span className="num text-amber">{trustP.trust}</span>
+            </a>
+          )}
         </div>
       </div>
-      {payTarget && <PaymentModal provider={payTarget.provider} cost={payTarget.cost} onClose={()=>setPayTarget(null)}/>}
-    </Fragment>
+    </div>
   );
 }
 
@@ -4759,7 +4317,6 @@ function RecommendedAction({ run }) {
 function ProviderPage({ slug }) {
   const { t } = useLang();
   const p = PROVIDERS.find(x=>x.slug===slug);
-  const [showSetup, setShowSetup] = useState(false);
   if (!p) return <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center text-smoke">{t('provider.notFound')}</div>;
 
   return (
@@ -4806,24 +4363,15 @@ function ProviderPage({ slug }) {
         </div>
         <div className="flex flex-col gap-2 items-end">
           <a href={`#/run?provider=${slug}`} className="btn-brand px-5 py-2.5 text-sm font-medium inline-flex items-center gap-2">{t('provider.openInRun')} <I.arrow className="w-4 h-4"/></a>
-          <button onClick={() => setShowSetup(true)} className="btn-ghost px-5 py-2 text-sm inline-flex items-center gap-2">
-            <I.bolt className="w-4 h-4"/> {t('provider.setupViaAgent')}
-          </button>
-          {p.walletPay && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] border border-sky/40 text-sky px-2.5 py-1 mt-2"><I.dot className="w-2 h-2"/> {t('provider.walletPaySupported')}</span>
-          )}
         </div>
       </div>
 
-      {showSetup && <SetupPromptModal provider={p} onClose={() => setShowSetup(false)}/>}
-
       {/* METRICS */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-ink-600 mb-12">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink-600 mb-12">
         <Metric label={t('provider.m1MTokInOut')} value={`${fmtUSD(p.costIn)} / ${fmtUSD(p.costOut)}`} sub="" tone={p.costDelta < 0 ? 'brand' : p.costDelta > 10 ? 'coral' : 'bone'}/>
         <TrustHistoryCard p={p}/>
         <Metric label={t('provider.mP50Latency')} value={`${p.latency}s`} sub={t('provider.mP95', { v: p.p95 })}/>
         <Metric label={t('provider.mSuccess')} value={fmtPct(p.success, 1)} sub={t('provider.mSamples', { n: p.samples.toLocaleString() })}/>
-        <Metric label={t('provider.mWallet')} value={p.walletPay ? t('provider.mWalletYes') : t('provider.mWalletNo')} sub={p.crypto ? t('provider.mCryptoRails') : t('provider.mCardOnly')} tone={p.walletPay ? 'sky' : 'bone'}/>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-12">
@@ -5359,227 +4907,10 @@ function TrustHistoryCard({ p }) {
       <div className="mt-3 -ml-1">
         <Sparkline data={h.spark} color={sparkColor} w={180} h={26}/>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-3 text-[11px]">
-        <div>
-          <div className="num text-bone">{t('provider.streakDays', { n: h.streakDays })}</div>
-          <div className="micro text-smoke">{t('provider.streakLabel')}</div>
-        </div>
-        <div>
-          <div className="num text-bone">{h.recoveryMin != null ? t('provider.recoveryMin', { n: h.recoveryMin }) : '—'}</div>
-          <div className="micro text-smoke">{t('provider.recoveryLabel')}</div>
-        </div>
-      </div>
     </div>
   );
 }
 
-/* ===========================================================
-   WALLET / PAYMENT MODALS
-   =========================================================== */
-
-function WalletConnectModal() {
-  const { t } = useLang();
-  const { showConnect, setShowConnect, connect, wallet } = useWallet();
-  if (!showConnect) return null;
-  return (
-    <Modal onClose={()=>setShowConnect(false)}>
-      <div className="micro text-smoke mb-2">{t('wallet.connectTag')}</div>
-      <h3 className="serif text-4xl tracking-editorial">{t('wallet.connectHeadPre')} <span className="serif-it text-brand">{t('wallet.connectHeadIt')}</span> {t('wallet.connectHeadPost')}</h3>
-      <p className="mt-3 text-ash text-[13px] leading-relaxed">
-        {t('wallet.connectBody')}
-      </p>
-      <div className="mt-6 space-y-2">
-        {[
-          { name: t('wallet.walletAgenticName'), sub: t('wallet.walletAgenticSub'), primary: true },
-          { name: t('wallet.walletConnectName'), sub: t('wallet.walletConnectSub'), primary: false },
-          { name: t('wallet.walletExtName'), sub: t('wallet.walletExtSub'), primary: false },
-        ].map((w, i) => (
-          <button
-            key={i}
-            onClick={connect}
-            className={cx('w-full flex items-center justify-between px-4 py-3 border transition-colors text-left',
-              w.primary ? 'border-brand/60 hover:bg-brand/5' : 'border-ink-600 hover:border-bone/30')}
-          >
-            <div>
-              <div className={cx('text-[14px]', w.primary ? 'text-brand' : 'text-bone')}>{w.name}</div>
-              <div className="micro text-smoke mt-0.5">{w.sub}</div>
-            </div>
-            <I.arrow className="w-4 h-4 text-ash"/>
-          </button>
-        ))}
-      </div>
-      <p className="mt-6 text-[11px] text-smoke leading-relaxed">
-        {t('wallet.connectDisclaimerPre')}<a href="#" className="ulink text-ash">{t('wallet.connectDisclaimerPrivacy')}</a>{t('wallet.connectDisclaimerAnd')}<a href="#" className="ulink text-ash">{t('wallet.connectDisclaimerTerms')}</a>{t('wallet.connectDisclaimerPost')}
-      </p>
-    </Modal>
-  );
-}
-
-function PaymentModal({ provider, cost, onClose }) {
-  const { t } = useLang();
-  const { wallet } = useWallet();
-  const [stage, setStage] = useState('confirm'); // confirm | signing | paid
-  const onPay = () => {
-    setStage('signing');
-    setTimeout(()=> setStage('paid'), 1500);
-  };
-  return (
-    <Modal onClose={onClose}>
-      {stage === 'confirm' && (
-        <Fragment>
-          <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
-            <div className="micro text-smoke">{t('payment.intentTag')}</div>
-            <span className="inline-flex items-center gap-1.5 text-[10px] tracking-wider uppercase border border-brand/40 text-brand px-2 py-0.5">
-              <I.dot className="w-1.5 h-1.5"/> {t('payment.x402Compatible')}
-            </span>
-          </div>
-          <h3 className="serif text-3xl sm:text-4xl tracking-editorial">{t('payment.headline')}</h3>
-          <div className="mt-6 card-2 divide-y divide-ink-600">
-            <Row label={t('payment.rowProvider')} value={provider.name}/>
-            <Row label={t('payment.rowModel')} value="GPT-5.5"/>
-            <Row label={t('payment.rowEstCost')} value={fmtUSD(cost, 4)} accent/>
-            <Row label={t('payment.rowMethod')} value={t('payment.rowMethodValue')}/>
-            <Row label={t('payment.rowFrom')} value={wallet?.address || '—'}/>
-          </div>
-          <button onClick={onPay} className="btn-brand w-full mt-6 py-3 text-sm font-medium inline-flex items-center justify-center gap-2">
-            <I.lock className="w-4 h-4"/> {t('payment.signAndPay')}
-          </button>
-          <div className="mt-3 text-center text-[11px] text-smoke leading-relaxed">
-            {t('payment.footnote')}
-          </div>
-        </Fragment>
-      )}
-      {stage === 'signing' && (
-        <div className="text-center py-12">
-          <I.spin className="w-12 h-12 mx-auto animate-spin text-brand"/>
-          <div className="serif text-3xl tracking-editorial mt-6">{t('payment.awaiting')}<span className="serif-it text-brand">…</span></div>
-          <div className="micro text-smoke mt-2">{t('payment.awaitingSub')}</div>
-        </div>
-      )}
-      {stage === 'paid' && (
-        <div className="text-center py-8">
-          <div className="w-12 h-12 mx-auto bg-brand/10 ring-1 ring-brand flex items-center justify-center">
-            <I.check className="w-7 h-7 text-brand"/>
-          </div>
-          <div className="serif text-4xl tracking-editorial mt-6">{t('payment.paid')}</div>
-          <div className="micro text-smoke mt-2">{t('payment.paidTx')}</div>
-          <div className="text-ash text-[13px] mt-4">{t('payment.paidSub')}</div>
-          <button onClick={onClose} className="btn-ghost px-6 py-2 text-[12px] mt-8">{t('payment.close')}</button>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-function Row({ label, value, accent }) {
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <span className="micro text-smoke">{label}</span>
-      <span className={cx('text-[13px] num', accent ? 'text-brand' : 'text-bone')}>{value}</span>
-    </div>
-  );
-}
-
-function SetupPromptModal({ provider, onClose }) {
-  const { t } = useLang();
-  const toast = useToast();
-  const [funding, setFunding] = useState(20);
-  const [customMode, setCustomMode] = useState(false);
-  const PRESETS = [10, 20, 50];
-  const promptText = useMemo(() => setupPrompt(provider, funding), [provider, funding]);
-
-  const onCopy = async () => {
-    await copyToClipboard(promptText);
-    toast.show(t('setup.copyToast'));
-  };
-
-  return (
-    <Modal onClose={onClose} size="lg">
-      <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
-        <div className="micro text-smoke">{t('setup.tag')}</div>
-        <span className="inline-flex items-center gap-1.5 text-[10px] tracking-wider uppercase border border-brand/40 text-brand px-2 py-0.5">
-          <I.dot className="w-1.5 h-1.5"/> {t('setup.x402Compatible')}
-        </span>
-      </div>
-      <h3 className="serif text-3xl sm:text-4xl tracking-editorial">
-        {t('setup.headPre')} <span className="serif-it text-brand">{provider.name}</span> {t('setup.headPost')}
-      </h3>
-      <p className="mt-3 text-ash text-[13px] leading-relaxed max-w-xl">
-        {t('setup.body', { name: provider.name })}
-      </p>
-
-      {/* 3-step strip */}
-      <div className="mt-6 grid grid-cols-3 gap-px bg-ink-600 border border-ink-600">
-        {[
-          { n: '1', l: t('setup.step1Title'), d: t('setup.step1Sub') },
-          { n: '2', l: t('setup.step2Title'), d: t('setup.step2Sub') },
-          { n: '3', l: t('setup.step3Title'), d: t('setup.step3Sub') },
-        ].map(s => (
-          <div key={s.n} className="bg-ink p-3">
-            <div className="serif-it text-2xl text-brand leading-none">{s.n}</div>
-            <div className="text-[12px] text-bone mt-2">{s.l}</div>
-            <div className="micro text-smoke mt-1">{s.d}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Funding chips */}
-      <div className="mt-6">
-        <div className="micro text-smoke mb-2">{t('setup.fundingLabel')}</div>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {PRESETS.map(amt => (
-            <button
-              key={amt}
-              onClick={() => { setFunding(amt); setCustomMode(false); }}
-              className={cx(
-                'px-3 py-1.5 text-[12px] border transition-colors',
-                !customMode && funding === amt ? 'border-brand text-brand bg-brand/5' : 'border-ink-500 text-ash hover:border-bone hover:text-bone'
-              )}
-            >${amt}</button>
-          ))}
-          <button
-            onClick={() => setCustomMode(true)}
-            className={cx(
-              'px-3 py-1.5 text-[12px] border transition-colors',
-              customMode ? 'border-brand text-brand bg-brand/5' : 'border-ink-500 text-ash hover:border-bone hover:text-bone'
-            )}
-          >{t('setup.fundingCustom')}</button>
-          {customMode && (
-            <input
-              type="number"
-              min="1"
-              max="500"
-              value={funding}
-              onChange={e => {
-                const v = Math.max(1, Math.min(500, Number(e.target.value) || 0));
-                setFunding(v);
-              }}
-              className="w-24 bg-ink-800 border border-ink-500 focus:border-brand/60 outline-none px-3 py-1.5 text-[12px] num text-bone"
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Prompt code block */}
-      <div className="mt-5">
-        <div className="micro text-smoke mb-2">{t('setup.promptLabel')}</div>
-        <pre className="bg-ink-800 border border-ink-600 px-4 py-3 text-[12px] leading-relaxed text-bone font-mono whitespace-pre-wrap max-h-[280px] overflow-y-auto">{promptText}</pre>
-      </div>
-
-      <button
-        onClick={onCopy}
-        className="btn-brand w-full mt-5 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
-      >
-        <I.copy className="w-4 h-4"/> {t('setup.copyPrompt')}
-      </button>
-
-      <div className="mt-4 flex items-start gap-2 text-[11px] text-smoke leading-relaxed">
-        <I.lock className="w-3 h-3 mt-0.5 shrink-0 text-brand"/>
-        <span>{t('setup.footnote')}</span>
-      </div>
-    </Modal>
-  );
-}
 
 function Modal({ onClose, children, size = 'md' }) {
   useEffect(() => {
@@ -5598,66 +4929,6 @@ function Modal({ onClose, children, size = 'md' }) {
   );
 }
 
-/* ===========================================================
-   WALLET PAGE
-   =========================================================== */
-
-function WalletPage() {
-  const { t } = useLang();
-  const { wallet, disconnect, setShowConnect } = useWallet();
-  return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-12">
-      <div className="micro text-smoke mb-2">{t('wallet.accountTag')}</div>
-      <h1 className="serif text-4xl sm:text-5xl lg:text-6xl tracking-editorial">{t('wallet.headPre')} <span className="serif-it text-brand">{t('wallet.headIt')}</span> {t('wallet.headPost')}</h1>
-
-      {!wallet ? (
-        <div className="mt-12 card p-16 text-center">
-          <I.wallet className="w-12 h-12 mx-auto text-smoke"/>
-          <div className="serif text-3xl tracking-editorial mt-6">{t('wallet.noWallet')}</div>
-          <p className="text-ash text-[13px] mt-2">{t('wallet.noWalletSub')}</p>
-          <button onClick={()=>setShowConnect(true)} className="btn-brand px-6 py-3 text-sm font-medium mt-6">{t('wallet.connectWallet')}</button>
-        </div>
-      ) : (
-        <div className="mt-12 grid lg:grid-cols-3 gap-px bg-ink-600">
-          <div className="bg-ink p-5 sm:p-6 lg:p-8 lg:col-span-2">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="micro text-smoke">{t('wallet.address')}</div>
-              <span className="inline-flex items-center gap-1.5 text-[10px] tracking-wider uppercase border border-brand/40 text-brand px-2 py-0.5">
-                <I.dot className="w-1.5 h-1.5"/> {t('wallet.x402Compatible')}
-              </span>
-            </div>
-            <div className="num text-[15px] mt-1 text-bone break-all">{wallet.full}</div>
-            <div className="grid grid-cols-3 gap-px bg-ink-600 mt-8">
-              <Metric label={t('wallet.mBalance')} value={fmtUSD(wallet.balance)} sub={t('wallet.mBalanceSub')} tone="brand"/>
-              <Metric label={t('wallet.mChain')} value={wallet.chain} sub={t('wallet.mChainSub')}/>
-              <Metric label={t('wallet.mStatus')} value={t('wallet.mStatusActive')} sub={t('wallet.mStatusSub')} tone="brand"/>
-            </div>
-          </div>
-          <div className="bg-ink p-5 sm:p-6 lg:p-8">
-            <div className="micro text-smoke mb-3">{t('wallet.recentActivity')}</div>
-            <div className="space-y-3">
-              {[
-                { t: '2m ago', p: 'Together', a: '$0.013' },
-                { t: '1h ago', p: 'Portkey', a: '$0.018' },
-                { t: '3h ago', p: 'B.ai', a: '$0.011' },
-                { t: '8h ago', p: 'Together', a: '$0.014' },
-              ].map((tx, i) => (
-                <div key={i} className="flex items-center justify-between text-[12px] py-2 border-b border-ink-600 last:border-0">
-                  <div>
-                    <div className="text-bone">{tx.p}</div>
-                    <div className="micro text-smoke">{tx.t}</div>
-                  </div>
-                  <div className="num text-bone">{tx.a}</div>
-                </div>
-              ))}
-            </div>
-            <button onClick={disconnect} className="mt-6 btn-ghost w-full py-2 text-[12px]">{t('wallet.disconnect')}</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 /* ===========================================================
    VALIDATE  —  public fingerprint tool for any AI router URL
@@ -6393,7 +5664,6 @@ function App() {
   if (path === '/') page = <HomePage/>;
   else if (path === '/run' || path === '/compare' || path === '/playground') page = <RunPage/>;
   else if (path === '/validate') page = <ValidatePage/>;
-  else if (path === '/wallet') page = <WalletPage/>;
   else if (path === '/docs') page = <DocsPage/>;
   else if (path.startsWith('/providers/')) {
     const slug = path.replace('/providers/', '');
@@ -6410,7 +5680,6 @@ function App() {
         {page}
       </main>
       <Footer/>
-      <WalletConnectModal/>
     </div>
   );
 }
@@ -6420,11 +5689,9 @@ root.render(
   <RouterProvider>
     <ThemeProvider>
       <LangProvider>
-        <WalletProvider>
-          <ToastProvider>
-            <App/>
-          </ToastProvider>
-        </WalletProvider>
+        <ToastProvider>
+          <App/>
+        </ToastProvider>
       </LangProvider>
     </ThemeProvider>
   </RouterProvider>

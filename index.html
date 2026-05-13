@@ -104,9 +104,9 @@
     --smoke: 130 130 140;
     --brand: 31 50 214;       /* #1F32D6 — main cobalt for light bg */
     --brand-deep: 13 28 156;
-    --amber: 161 110 38;
+    --amber: 184 92 18;       /* warm rust-amber, no longer muddy khaki */
     --coral: 178 53 53;
-    --sky: 30 84 200;
+    --sky: 14 122 140;        /* teal-cyan, clearly distinct from --brand blue */
     --hover-overlay: 10 10 11 / 0.04;
     --noise-blend: multiply;
     --noise-opacity: 0.18;
@@ -510,7 +510,7 @@ const PROVIDERS = [
     desc: 'Aggregator router across 100+ models with broad provider coverage.',
   },
   {
-    slug: 'bai', name: 'B.ai', type: 'router', domain: null, website: null,
+    slug: 'bai', name: 'B.ai', type: 'router', domain: 'b.ai', website: 'https://b.ai',
     region: 'Global',
     costIn: 4.90, costOut: 14.70, costDelta: -2, ref: 10.0,
     latency: 1.0, p95: 2.5, ttft: 0.28,
@@ -1049,6 +1049,7 @@ const I = {
   eye: (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>,
   eyeOff: (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.6 19.6 0 0 1 5.06-5.94M9.9 4.24A10.93 10.93 0 0 1 12 4c7 0 11 7 11 7a19.4 19.4 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24M1 1l22 22"/></svg>,
   layers: (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>,
+  info: (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" {...p}><circle cx="12" cy="12" r="9.5"/><path d="M12 11v5.5M12 8.25v.01" strokeLinecap="round"/></svg>,
 };
 
 /* ===========================================================
@@ -1171,7 +1172,7 @@ const I18N = {
       adjFastest: 'fastest',
       subhead1: 'Real cost, real latency, no hidden routing.',
       subhead2: 'Same prompts, every router — we check fallbacks, model swaps, and pricing.',
-      openRun: 'Open Run',
+      openRun: 'Compare',
       activeRouters: 'Active routers',
       costVariance: 'Cost variance',
       costVarianceSub: 'cheapest → most expensive',
@@ -1222,17 +1223,14 @@ const I18N = {
       thRank: 'Rank',
       thProvider: 'Provider',
       thCost: '1M tok (in/out)',
+      thCostHint: 'Observed price per 1M tokens — input / output shown separately.',
       thScore: 'Score · Tier',
+      thScoreHint: 'Composite score (0.4·L1 + 0.4·L3 + 0.2·L2), mapped to AAA → C.',
       thSuccess: 'Success',
+      thSuccessHint: 'Share of probes that returned cleanly within the SLA window.',
       thLatency: 'p50 / p95',
+      thLatencyHint: 'p50 = median completion time. p95 = the slowest 5% tail.',
       thAction: 'Action',
-      insightCheapest: 'Cheapest',
-      insightMostTrusted: 'Most trusted',
-      insightBestOverall: 'Best overall',
-      useCheapest: 'Use cheapest',
-      noProviders: 'No providers match these filters.',
-      resetFilters: 'Reset filters',
-      mob1MTok: '1M tok',
       rowRun: 'Run',
       agoJustNow: 'just now',
       ago1m: '1m ago',
@@ -1241,15 +1239,31 @@ const I18N = {
       agoHours: '{n}h ago',
       agoDays: '{n}d ago',
     },
-    insights: {
-      costTag: '§03 · Cost',
-      costTitle: 'Why “cheapest” needs a footnote.',
-      costBody: 'Three of the eight routers we sampled added 11–36 % over the model’s official reference price during the past 24h. Two of them apply silent fallback to lighter variants under load — which would skew naive cost reads.',
-      costStat: 'Drift incidents',
-      trustTag: '§04 · Trust',
-      trustTitle: 'Model fidelity is not a marketing claim.',
-      trustBody: 'Output-length distribution and refusal patterns are remarkably distinguishable across model families. We use those signatures to flag claimed-vs-actual mismatches, not vendor self-attestation.',
-      trustStat: 'Mismatch flags',
+    homeMethodology: {
+      tag: '§01 · Methodology',
+      headlinePre: 'Nine signals,',
+      headlineIt: 'one',
+      headlinePost: 'grade.',
+      subhead: 'Three weighted tiers · continuous sampling · anchored to published research.',
+      l1Label: 'L1 · Trust',
+      l1d1: 'Model authenticity',
+      l1d2: 'Billing transparency',
+      l1d3: 'Cache fraud',
+      l3Label: 'L3 · Economics',
+      l3d1: 'List pricing',
+      l3d2: 'vs Official',
+      l3d3: 'Hidden cost',
+      l2Label: 'L2 · Performance',
+      l2d1: 'Latency · p95/p99',
+      l2d2: 'Throughput',
+      l2d3: 'Long-context decay',
+      formulaLabel: 'Overall',
+      formula: '0.4·L1 + 0.4·L3 + 0.2·L2',
+      tiersLabel: 'Grade',
+      link: 'Full methodology',
+      heroStripRouters: 'routers',
+      heroStripModels: 'frontier models',
+      heroStripSamples: 'samples',
     },
     docs: {
       heroTag: 'Methodology · GatewayBench v1',
@@ -1759,16 +1773,16 @@ const I18N = {
     },
     hero: {
       issue: 'RR-001 · 第 12 期 · 2026 年 5 月',
-      preface: '8 家 AI 路由器 × 6 款前沿模型的透明化评测',
+      preface: '8 家 API 中转站 × 6 款前沿模型的透明化评测',
       findThe: '找到',
-      aiRouter: 'AI 路由器',
+      aiRouter: 'API 中转站',
       adjCheapest: '最便宜的',
       adjMostTrusted: '最可信的',
       adjFastest: '最快的',
       subhead1: '真实成本、真实延迟，无暗箱路由。',
-      subhead2: '同一组 prompt 持续打到每家路由器,核对回退、模型替换、价格偏差。',
-      openRun: '打开 Run',
-      activeRouters: '活跃路由器',
+      subhead2: '同一组 prompt 持续打到每家中转站,核对回退、模型替换、价格偏差。',
+      openRun: '进入对比',
+      activeRouters: '活跃中转站',
       costVariance: '价格区间',
       costVarianceSub: '最便宜 → 最贵',
       driftEvents: '回退漂移事件',
@@ -1778,7 +1792,7 @@ const I18N = {
       last24h: '近 24 小时',
     },
     footer: {
-      tagline: '一份关于 AI 路由器实际行为的公开账本——真实成本、延迟、模型保真度。专为不愿盲信厂商说辞的开发者打造。',
+      tagline: '一份关于 API 中转站实际行为的公开账本——真实成本、延迟、模型保真度。专为不愿盲信厂商说辞的开发者打造。',
       lastRefresh: '最近更新',
       productHeading: '产品',
       methodologyHeading: '方法论',
@@ -1789,13 +1803,13 @@ const I18N = {
       mTrust: '信任分数公式',
       mCost: '成本计算',
       mSampling: '采样协议',
-      mIntegrity: '路由器诚信度',
-      disclaimer: '本站是一个基于 mock 数据的产品预览。信任分数、指纹检测、延迟与成本数字仅供说明,不构成投资、集成或采购建议。各路由器名称与 logo 归各自所有方,仅用于识别目的。',
+      mIntegrity: '中转站诚信度',
+      disclaimer: '本站是一个基于 mock 数据的产品预览。信任分数、指纹检测、延迟与成本数字仅供说明,不构成投资、集成或采购建议。各中转站名称与 logo 归各自所有方,仅用于识别目的。',
       copyright: '© RouterRank 2026 · Mock 数据 · 产品预览专用',
     },
     ranking: {
       sectionTag: '§02 · 实时榜单',
-      headlinePre: '调用一个路由器时,',
+      headlinePre: '调用一个中转站时,',
       headlineItalic: '真正',
       headlinePost: '发生了什么。',
       headlineLine2: '',
@@ -1816,19 +1830,16 @@ const I18N = {
       sortMostTrusted: '最可信',
       sortBestOverall: '综合最佳',
       thRank: '排名',
-      thProvider: '路由器',
+      thProvider: '中转站',
       thCost: '1M tok (输入/输出)',
+      thCostHint: '每 100 万 token 的观测价格,输入 / 输出分别展示。',
       thScore: '评分 · 等级',
+      thScoreHint: '综合分(0.4·L1 + 0.4·L3 + 0.2·L2),映射为 AAA → C。',
       thSuccess: '成功率',
+      thSuccessHint: '探测请求中在 SLA 窗口内正常完成的占比。',
       thLatency: 'p50 / p95',
+      thLatencyHint: 'p50 = 完成时间中位数;p95 = 最慢 5% 的尾部延迟。',
       thAction: '操作',
-      insightCheapest: '最便宜',
-      insightMostTrusted: '最可信',
-      insightBestOverall: '综合最佳',
-      useCheapest: '使用最便宜',
-      noProviders: '没有路由器符合当前筛选条件。',
-      resetFilters: '重置筛选',
-      mob1MTok: '1M tok',
       rowRun: '运行',
       agoJustNow: '刚刚',
       ago1m: '1 分钟前',
@@ -1837,15 +1848,31 @@ const I18N = {
       agoHours: '{n} 小时前',
       agoDays: '{n} 天前',
     },
-    insights: {
-      costTag: '§03 · 成本',
-      costTitle: '为什么"最便宜"需要一行注脚。',
-      costBody: '过去 24 小时,我们采样的 8 家路由器中有 3 家相对官方参考价上浮 11–36%。其中 2 家在压力下会静默回退到更轻量的变体——这会让粗略的成本读数失真。',
-      costStat: '漂移事件',
-      trustTag: '§04 · 可信度',
-      trustTitle: '模型保真度不是市场口号。',
-      trustBody: '输出长度分布和拒答模式在不同模型家族之间高度可识别。我们用这些指纹来标记"声称 vs 实际"的不匹配,而非依赖厂商自我声明。',
-      trustStat: '不匹配标记',
+    homeMethodology: {
+      tag: '§01 · 评测方法',
+      headlinePre: '9 个信号,',
+      headlineIt: '一份',
+      headlinePost: '评分。',
+      subhead: '三档加权 · 持续采样 · 论文锚定。',
+      l1Label: 'L1 · 可信度',
+      l1d1: '模型真实性',
+      l1d2: '计费透明度',
+      l1d3: '缓存欺诈',
+      l3Label: 'L3 · 经济性',
+      l3d1: '明面定价',
+      l3d2: 'vs 官方价',
+      l3d3: '隐性成本',
+      l2Label: 'L2 · 性能',
+      l2d1: '延迟 · p95/p99',
+      l2d2: '吞吐',
+      l2d3: '长上下文衰减',
+      formulaLabel: '综合分',
+      formula: '0.4·L1 + 0.4·L3 + 0.2·L2',
+      tiersLabel: '评级',
+      link: '完整方法论',
+      heroStripRouters: '中转站',
+      heroStripModels: '前沿模型',
+      heroStripSamples: '次采样',
     },
     docs: {
       heroTag: '方法论 · GatewayBench v1',
@@ -1854,7 +1881,7 @@ const I18N = {
       heroSubhead: 'GatewayBench 是支撑榜单上每一个分数的框架。三个层级、九个维度,每一个都锚定到已发表的研究并可在公开环境下复跑。下面是每个维度的含义、我们如何采集它,以及我们自知仍然欠缺的地方。',
       s00Tag: '§00 · 框架',
       s00Title: '三个层级 · 九个维度',
-      s00Body: '我们把路由器的行为收敛到开发者在接入前真正会问的三个原生问题:',
+      s00Body: '我们把中转站的行为收敛到开发者在接入前真正会问的三个原生问题:',
       s00BodyEm: '是不是真的、要花多少钱、有多快',
       s00BodyPost: '。其它维度(合规、功能、DX)都属于这三个的下游。',
       tierL1Label: '可信度',
@@ -1901,7 +1928,7 @@ const I18N = {
       l13Method3Why: 'A 账号发独特 prompt;B 账号发同 prompt。出现跨账号命中即违反隔离。',
       l13Method4Why: '把厂商声称的 TTL(Anthropic 5 分钟 / 1 小时 档)与实际释放行为对比。',
       l13Score: '评分:错报率。零错报满分。每个百分点错报按比例扣分。',
-      l2Intro: '性能很重要,但不是厂商主要不诚实的维度。我们给它 20%——足以惩罚慢路由器,但不足以让"快但虚假"的胜出。',
+      l2Intro: '性能很重要,但不是厂商主要不诚实的维度。我们给它 20%——足以惩罚慢中转站,但不足以让"快但虚假"的胜出。',
       l21IntroPre: '单一平均值会误导;离群值才主导用户体验。我们对 4 个指标全量上报 ',
       l21IntroBold: 'P50 / P95 / P99',
       l21IntroPost: ' 的完整分布。',
@@ -1935,7 +1962,7 @@ const I18N = {
       l31Price4Post: ' — $/1M tokens(Anthropic 的 5 分钟 vs 1 小时 TTL 价格不同,各自单独上报)。',
       l31Note: '混合价 = 输入:输出 3:1 (Artificial Analysis 惯例) — 仅用于快速对比,不用于评分。',
       l32Intro: '价格比 = 平台价格 / 官方厂商价格。诚实的基准取决于平台的角色:',
-      l32Base1Tag: '聚合路由器',
+      l32Base1Tag: '聚合中转站',
       l32Base1Body: ' 基准(5.5% 路由费,OpenRouter 惯例)',
       l32Base2Tag: 'Gateway / 代理',
       l32Base2Body: ' 基准(透传)',
@@ -1956,9 +1983,9 @@ const I18N = {
       s04WindowTag: '窗口',
       s04WindowBodyPre: '',
       s04WindowSpan1: '72 小时滚动 P50',
-      s04WindowMid: ',按(路由器 × 模型)对配。需至少 ',
+      s04WindowMid: ',按(中转站 × 模型)对配。需至少 ',
       s04WindowSpan2: '7 天',
-      s04WindowPost: ' 数据后路由器才会上榜。',
+      s04WindowPost: ' 数据后中转站才会上榜。',
       s04CadenceTag: '节奏',
       s04CadencePre: '动态 API 每 ',
       s04CadenceSpan1: '3 小时',
@@ -1978,7 +2005,7 @@ const I18N = {
       s05Item3: '原始数据:CSV / Parquet,每日刷新。',
       s05Item4Pre: 'Token 计数:',
       s05Item4Mid: ' 配合 ',
-      s05Item4Post: ',避免不同路由器之间因 tokenizer 引入漂移。',
+      s05Item4Post: ',避免不同中转站之间因 tokenizer 引入漂移。',
       s05Item5: '硬件:按地域记录的标准化客户端配置。',
       s05Method1Why: '本榜单性能 / 成本 / 延迟权衡轴及可复现承诺的方法论基础。',
       s05Method2Why: '本榜单 prompt 集合版本化与原始数据导出所采用的可复现性标准。',
@@ -2004,7 +2031,7 @@ const I18N = {
       s07Item7Bold: '运营成本透明度。',
       s07Item7Body: ' 运行该面板每月都有可观的 API 调用成本。等环境稳定后我们会公布月度运营成本总额——目前尚未公布。',
       ctaBody: '把整套规则读完。如有异议请书面回应。这个榜单的存在就是为了被反驳。',
-      ctaButton: '找一家路由器',
+      ctaButton: '找一家中转站',
     },
     validate: {
       tool: '工具 · Validate',
@@ -2047,7 +2074,7 @@ const I18N = {
       probeOk: '{n} 条 prompt 通过',
       tokMatch: '✓ 匹配',
       tokMismatch: '✗ 不匹配',
-      indexedRouter: '已索引的路由器',
+      indexedRouter: '已索引的中转站',
       firstSeen: '首次见到的端点',
       onTheBoard: '已上榜',
       singleProbe: '单次探测',
@@ -2069,12 +2096,12 @@ const I18N = {
       fpRefusal: '拒答对齐',
       fpRefusalHint: '与原版模型在 30 条安全 probe 集合上的拒答率差。',
       firstSeenNote: '该 URL 尚未上榜——你看到的是单次探测的快照。如需连续面板评分,请申请索引,或在我们采样满 24 小时后再回来查看。',
-      indexedNote: '该端点匹配一家已索引的路由器。',
+      indexedNote: '该端点匹配一家已索引的中转站。',
       indexedLink: '查看完整连续面板报告 →',
       methodologyTag: '原理说明',
       methodologyTitlePre: '一次探测,而非一组',
       methodologyTitleIt: '面板。',
-      methodologyP1: '榜单上的分数来自持续运行的面板——每家路由器每天数千次采样。本页对你粘贴的 URL 进行 ',
+      methodologyP1: '榜单上的分数来自持续运行的面板——每家中转站每天数千次采样。本页对你粘贴的 URL 进行 ',
       methodologyP1Em: '一次',
       methodologyP1Post: ' 探测。单次调用能直接核实的就几样(见下方左列),其余都是统计量,需要面板才能可靠评分。把首次见到的结果当作方向性信号,而不是最终判定。',
       methodologyP2Pre: '在 GatewayBench 框架下,这次单次探测对应 ',
@@ -2096,25 +2123,25 @@ const I18N = {
       headPre: '一个 prompt。',
       headOneAnswer: '一个回答。',
       headNTruths: 'N 种说法。',
-      subSingle: '把你的 prompt 通过一家路由器发出。流式查看响应,一次看到真实的成本与延迟。',
-      subCompare: '把同一份输入,通过最多 5 家路由器同时发出。看每家给你什么、收多少钱、声称用了什么模型,以及 GatewayBench 评分如何。',
+      subSingle: '把你的 prompt 通过一家中转站发出。流式查看响应,一次看到真实的成本与延迟。',
+      subCompare: '把同一份输入,通过最多 5 家中转站同时发出。看每家给你什么、收多少钱、声称用了什么模型,以及 GatewayBench 评分如何。',
       newComparison: '新的对比',
       share: '分享',
       runLinkCopied: '运行链接已复制',
       labelPrompt: 'Prompt',
-      promptPlaceholder: '粘贴一段 prompt 以对比路由器...',
+      promptPlaceholder: '粘贴一段 prompt 以对比中转站...',
       detected: '识别为',
       samplesLabel: '或选一个示例自动填入',
       runHotkey: '运行',
       labelModel: '模型',
-      modelSupportCount: '{n} 家路由器支持该模型',
-      labelProviders: '路由器',
+      modelSupportCount: '{n} 家中转站支持该模型',
+      labelProviders: '中转站',
       selectedCount: '已选 {n}/5',
       compareMode: '对比模式',
       singleMode: '单条模式',
-      keepAtLeast1: '至少保留 1 家路由器',
+      keepAtLeast1: '至少保留 1 家中转站',
       pickAtLeast1: '至少选 1 家才能运行',
-      max5Providers: '每次运行最多 5 家路由器',
+      max5Providers: '每次运行最多 5 家中转站',
       temperature: 'Temperature',
       maxTokens: 'Max tokens',
       btnRunning: '运行中...',
@@ -2127,8 +2154,8 @@ const I18N = {
       emptySingleTitle: '尚无',
       emptyCompareTitle: '尚未',
       emptyYet: '输出',
-      emptySingleBodyA: '输入 prompt、选择路由器,然后点 ',
-      emptyCompareBodyA: '在左侧配置 prompt、模型和路由器,然后点 ',
+      emptySingleBodyA: '输入 prompt、选择中转站,然后点 ',
+      emptyCompareBodyA: '在左侧配置 prompt、模型和中转站,然后点 ',
       emptyBodyB: ',实时见证它们的真实表现。',
       emptyToRun: '运行',
       phaseQueued: '排队中',
@@ -2159,7 +2186,7 @@ const I18N = {
       compareFailedCount: '失败 {n}',
       returnedIn: '{l}s 返回 · TTFT {ms}ms',
       retry: '重试',
-      verdictRouters: '判定 · {n} 家路由器',
+      verdictRouters: '判定 · {n} 家中转站',
       sumCheapest: '最便宜',
       sumFastest: '最快',
       sumMostTrusted: '最可信',
@@ -2168,7 +2195,7 @@ const I18N = {
       sumTtftMs: 'TTFT {ms}ms',
       sumBestBalance: '成本 / 信任度最佳平衡',
       scorecardLabel: '评分卡 · GatewayBench panel',
-      scoProvider: '路由器',
+      scoProvider: '中转站',
       scoL1: 'L1 信任',
       scoL3: 'L3 经济',
       scoL2: 'L2 性能',
@@ -2187,14 +2214,14 @@ const I18N = {
       diffLongest: '给出了最完整的回答({tok} tokens)。',
       diffShortest: '最简短({tok} tokens),约为最长的 {pct}%。',
       diffDrift: '出现了输出长度漂移(偏离中位 {pct}%)。',
-      diffFailedSingular: '家路由器失败,已从判定中排除。',
-      diffFailedPlural: '家路由器失败,已从判定中排除。',
+      diffFailedSingular: '家中转站失败,已从判定中排除。',
+      diffFailedPlural: '家中转站失败,已从判定中排除。',
       diffTrustFlag: '{name} 历史上的 fallback 透明度评分较低({score})——若依赖原版模型,请核实路由。',
-      benchCoding: '所有路由器都返回了语法合法的 TypeScript。类型签名宽度有所不同——Together 包含最多 JSDoc,而精简版本去掉了泛型。',
-      benchJson: '每家路由器都生成了可解析的 JSON。注意:schema 完整度有差异——部分省略了未知公司字段的 null 分支。',
-      benchMath: '所有路由器都得到 0.3 / (3/10)。"展示推导过程"的深度在面板内相差约 2 倍。',
+      benchCoding: '所有中转站都返回了语法合法的 TypeScript。类型签名宽度有所不同——Together 包含最多 JSDoc,而精简版本去掉了泛型。',
+      benchJson: '每家中转站都生成了可解析的 JSON。注意:schema 完整度有差异——部分省略了未知公司字段的 null 分支。',
+      benchMath: '所有中转站都得到 0.3 / (3/10)。"展示推导过程"的深度在面板内相差约 2 倍。',
       benchReasoning: '逻辑结论一致。冗长度有差异——精简版本会跳过显式的排除步骤。',
-      benchSafety: '没有路由器拒答。动作顺序和具体度有所不同;有一家漏掉了"不要转发"这一步。',
+      benchSafety: '没有中转站拒答。动作顺序和具体度有所不同;有一家漏掉了"不要转发"这一步。',
       benchLong: '主题覆盖一致。终止条款部分的深度参差——请仔细对照阅读。',
       benchMulti: '语言处理正确。CJK 表达保真度的差异比罗曼语族更明显。',
       benchDefault: '概念框架收敛(ERC-4337、paymaster)。细节深度有差异——见冗长度面板。',
@@ -2208,12 +2235,12 @@ const I18N = {
       recentRuns: '最近运行',
       yourLast: '你最近的',
       clear: '清空',
-      providersCount: '{n} 家路由器',
+      providersCount: '{n} 家中转站',
       modeCompare: '对比',
       modeSingleShort: '单条',
       okFraction: '{c}/{t} 成功',
       copyFirst: '复制第一份响应',
-      reUse: '复用此 prompt 与路由器组合',
+      reUse: '复用此 prompt 与中转站组合',
       responseCopied: '响应已复制',
       tplReasoning: '推理',
       tplCoding: '编程',
@@ -2243,7 +2270,7 @@ const I18N = {
       },
     },
     provider: {
-      notFound: '未找到该路由器。',
+      notFound: '未找到该中转站。',
       backToRanking: '榜单',
       openInRun: '在 Run 中打开',
       m1MTokInOut: '1M tok (输入/输出)',
@@ -2673,10 +2700,94 @@ function TierChip({ tier: t, size = 'sm' }) {
 function CostCell({ p }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="num tracking-tight text-bone">{fmtUSD(p.costIn)}</span>
+      <span className="num text-[14px] tracking-tight text-bone">{fmtUSD(p.costIn)}</span>
       <span className="text-smoke text-[11px]">/</span>
-      <span className="num text-[12px] text-bone">{fmtUSD(p.costOut)}</span>
+      <span className="num text-[14px] text-bone">{fmtUSD(p.costOut)}</span>
     </div>
+  );
+}
+
+// Display label for an external website URL. GitHub hosts get path-aware
+// labels (github.com/BerriAI/litellm); commercial domains drop the www.
+function websiteLabel(website) {
+  if (!website) return null;
+  try {
+    const u = new URL(website);
+    if (u.hostname === 'github.com') return 'github.com' + u.pathname.replace(/\/$/, '');
+    return u.hostname.replace(/^www\./, '');
+  } catch { return website; }
+}
+
+// Clickable external link subtitle for a provider — used in ranking rows
+// to show the canonical domain (e.g. "together.ai") that opens the
+// provider's site in a new tab. stopPropagation prevents the row's
+// stretched link from firing. Long URLs (GitHub paths) truncate with
+// ellipsis when the parent column is narrow.
+function ProviderDomainLink({ p, size = 'sm' }) {
+  if (!p.website) return null;
+  const label = websiteLabel(p.website);
+  return (
+    <a
+      href={p.website}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      title={label}
+      className={cx(
+        'relative z-[2] inline-flex items-center gap-1 min-w-0 max-w-full text-smoke hover:text-brand transition-colors',
+        size === 'sm' ? 'micro mt-0.5' : 'text-[11px] mt-1 normal-case tracking-normal',
+      )}
+    >
+      <span className={cx('truncate', size === 'sm' ? '' : 'normal-case tracking-normal')}>{label}</span>
+      <I.external className="w-2.5 h-2.5 shrink-0"/>
+    </a>
+  );
+}
+
+// Hover/focus tooltip with click-to-toggle for touch. Pops above the trigger
+// by default. Content can be a string or JSX. Width capped so long sentences
+// still wrap nicely on narrow screens.
+function Tooltip({ content, side = 'top', children, className = '', width = 240 }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onEsc = (e) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('keydown', onEsc);
+    return () => document.removeEventListener('keydown', onEsc);
+  }, [open]);
+  return (
+    <span
+      className={cx('relative z-10 inline-flex items-center', className)}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+    >
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label="Show explanation"
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o); }}
+        className="inline-flex items-center justify-center text-smoke hover:text-bone cursor-help transition-colors"
+      >
+        {children}
+      </span>
+      {open && (
+        <span
+          role="tooltip"
+          style={{ width }}
+          className={cx(
+            'absolute z-50 px-3 py-2 bg-ink-800 border border-ink-500 text-[11px] text-ash leading-relaxed shadow-lg whitespace-normal text-left normal-case tracking-normal',
+            side === 'top'    && 'bottom-full left-1/2 -translate-x-1/2 mb-2',
+            side === 'bottom' && 'top-full left-1/2 -translate-x-1/2 mt-2',
+            side === 'left'   && 'right-full top-1/2 -translate-y-1/2 mr-2',
+            side === 'right'  && 'left-full top-1/2 -translate-y-1/2 ml-2',
+          )}
+        >
+          {content}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -2705,13 +2816,31 @@ function HomePage() {
     <Fragment>
       <Hero />
       <RankingSection />
-      <InsightsRail />
     </Fragment>
   );
 }
 
+// Animated number that eases up from 0 to `target` on mount.
+// Used in the Hero credibility strip to make the stats feel live.
+function CountUp({ target, duration = 1100, format = (n) => n.toLocaleString() }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let raf;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const e = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setN(Math.round(target * e));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return <span className="num text-bone">{format(n)}</span>;
+}
+
 function Hero() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [adj, setAdj] = useState(0);
   const adjs = [
     { word: t('hero.adjCheapest'),    tone: 'text-brand' },
@@ -2723,26 +2852,117 @@ function Hero() {
     return () => clearInterval(id);
   }, []);
 
+  const tiers = [
+    { key: 'l1', weight: 40, color: 'text-brand', bar: 'bg-brand' },
+    { key: 'l2', weight: 20, color: 'text-sky',   bar: 'bg-sky' },
+    { key: 'l3', weight: 40, color: 'text-amber', bar: 'bg-amber' },
+  ];
+
   return (
-    <section className="relative hero-glow grid-bg">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-28 pb-20 lg:pb-28">
-        <div className="max-w-5xl mx-auto text-center">
-          <h1 className="serif leading-[0.92] tracking-editorial fade-up" style={{ animationDelay: '0.05s', fontSize: 'clamp(48px, 9vw, 112px)' }}>
-            {t('hero.findThe')}<br />
-            <span className={cx('serif-it transition-colors duration-500 inline-block', adjs[adj].tone)}>
-              {adjs[adj].word}
-            </span><br />
-            <span className="text-bone">{t('hero.aiRouter')}</span>
-          </h1>
-          <p className="mt-8 sm:mt-10 max-w-2xl mx-auto text-ash text-base sm:text-lg leading-relaxed fade-up" style={{ animationDelay: '0.1s' }}>
-            {t('hero.subhead1')}<br className="hidden sm:inline"/>
-            <span className="text-smoke">{t('hero.subhead2')}</span>
-          </p>
-          <div className="mt-10 sm:mt-12 flex justify-center fade-up" style={{ animationDelay: '0.15s' }}>
-            <a href="#/run" className="btn-brand px-6 py-3 text-sm font-medium tracking-tight inline-flex items-center gap-2">
-              {t('hero.openRun')} <I.arrow className="w-4 h-4" />
-            </a>
+    <section className="relative hero-glow grid-bg overflow-hidden">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-12 lg:pt-16 pb-12 lg:pb-16">
+        <div className="grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-16 items-start">
+
+          {/* LEFT — pitch */}
+          <div>
+            <div className="micro text-smoke mb-4 fade-up" style={{ animationDelay: '0s' }}>§00 · {lang === 'zh' ? 'API 中转站评测台' : 'API Gateway Benchmark'}</div>
+            <h1 className="serif leading-[0.95] tracking-editorial fade-up" style={{ animationDelay: '0.05s', fontSize: 'clamp(44px, 6.4vw, 84px)' }}>
+              {t('hero.findThe')}<br />
+              <span className={cx('serif-it transition-colors duration-500 inline-block', adjs[adj].tone)}>
+                {adjs[adj].word}
+              </span><br />
+              <span className="text-bone">{t('hero.aiRouter')}</span>
+            </h1>
+            <p className="mt-6 sm:mt-8 max-w-xl text-ash text-[15px] sm:text-base leading-relaxed fade-up" style={{ animationDelay: '0.1s' }}>
+              {t('hero.subhead1')}{' '}
+              <span className="text-smoke">{t('hero.subhead2')}</span>
+            </p>
+            <div className="mt-7 sm:mt-9 flex flex-wrap items-center gap-3 fade-up" style={{ animationDelay: '0.15s' }}>
+              <a href="#/run" className="btn-brand px-6 py-3 text-sm font-medium tracking-tight inline-flex items-center gap-2">
+                {t('hero.openRun')} <I.arrow className="w-4 h-4" />
+              </a>
+              <a href="#/docs" className="btn-ghost px-5 py-3 text-sm tracking-tight inline-flex items-center gap-2">
+                {t('homeMethodology.link')} <I.arrow className="w-4 h-4" />
+              </a>
+            </div>
+            <div className="mt-8 sm:mt-10 flex items-center gap-3 sm:gap-5 micro text-smoke flex-wrap fade-up" style={{ animationDelay: '0.2s' }}>
+              <span><CountUp target={HERO_STATS.activeRouters}/> {t('homeMethodology.heroStripRouters')}</span>
+              <span className="text-ink-500">·</span>
+              <span><CountUp target={MODELS.length}/> {t('homeMethodology.heroStripModels')}</span>
+              <span className="text-ink-500">·</span>
+              <span><CountUp target={HERO_STATS.totalSamples} duration={1500}/> {t('homeMethodology.heroStripSamples')}</span>
+            </div>
           </div>
+
+          {/* RIGHT — methodology card */}
+          <div className="fade-up" style={{ animationDelay: '0.28s' }}>
+            <div className="card relative overflow-hidden">
+              {/* Top brand gradient line */}
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand/70 to-transparent"/>
+
+              <div className="p-6 sm:p-7">
+                {/* Header */}
+                <div className="flex items-baseline justify-between mb-5">
+                  <div className="micro text-smoke flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-brand rounded-full pulse-dot"/>
+                    {t('homeMethodology.tag')}
+                  </div>
+                  <a href="#/docs" className="micro text-brand hover:underline inline-flex items-center gap-1">
+                    {t('homeMethodology.link')} <I.arrow className="w-3 h-3"/>
+                  </a>
+                </div>
+
+                {/* Compact headline */}
+                <h2 className="serif text-[28px] sm:text-[32px] tracking-editorial leading-[1.1]">
+                  {t('homeMethodology.headlinePre')} <span className="serif-it text-brand">{t('homeMethodology.headlineIt')}</span>{t('homeMethodology.headlinePost')}
+                </h2>
+                <p className="mt-2 text-ash text-[12.5px] leading-relaxed">{t('homeMethodology.subhead')}</p>
+
+                {/* Tier rows */}
+                <div className="mt-6 space-y-px bg-ink-600 border border-ink-600">
+                  {tiers.map((tier, i) => (
+                    <div
+                      key={tier.key}
+                      className="bg-ink p-4 transition-colors hover:bg-ink-800 group fade-up"
+                      style={{ animationDelay: `${0.35 + i * 0.07}s` }}
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <div className={cx('serif text-[18px] tracking-editorial', tier.color)}>
+                          {t('homeMethodology.' + tier.key + 'Label')}
+                        </div>
+                        <div className={cx('num text-[11px] opacity-60 group-hover:opacity-100 transition-opacity', tier.color)}>
+                          {tier.weight}%
+                        </div>
+                      </div>
+                      <div className="mt-1.5 text-[11.5px] text-smoke">
+                        {t('homeMethodology.' + tier.key + 'd1')}
+                        <span className="text-ink-500 mx-1.5">·</span>
+                        {t('homeMethodology.' + tier.key + 'd2')}
+                        <span className="text-ink-500 mx-1.5">·</span>
+                        {t('homeMethodology.' + tier.key + 'd3')}
+                      </div>
+                      {/* Weight bar */}
+                      <div className="mt-3 h-0.5 bg-ink-700 relative overflow-hidden">
+                        <div className={cx('absolute inset-y-0 left-0 transition-all duration-1000', tier.bar)} style={{ width: tier.weight + '%' }}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Formula + tier ladder */}
+                <div className="mt-5 pt-4 border-t border-ink-600 flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <span className="micro text-smoke">{t('homeMethodology.formulaLabel')}</span>
+                    <span className="num text-bone">{t('homeMethodology.formula')}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {['AAA','AA','A','B','C'].map(tier => <TierChip key={tier} tier={tier}/>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -2814,199 +3034,192 @@ function RankingSection() {
     return data.sort(sortKey);
   }, [model, sort, region]);
 
-  const insight = useMemo(() => {
-    if (!filtered.length) return null;
-    const cheapest = [...filtered].sort((a, b) => a.cost - b.cost)[0];
-    const fastest = [...filtered].sort((a, b) => a.latency - b.latency)[0];
-    const trusted = [...filtered].sort((a, b) => b.trust - a.trust)[0];
-    const overall = [...filtered].sort((a, b) => b.overall - a.overall)[0];
-    const avg = filtered.reduce((s, p) => s + p.cost, 0) / filtered.length;
-    const cheapPct = avg > 0 ? Math.round(((avg - cheapest.cost) / avg) * 100) : 0;
-    return { cheapest, fastest, trusted, overall, cheapPct };
-  }, [filtered]);
-
-  const cheapest = insight?.cheapest;
-  const fastest = insight?.fastest;
-  const trusted = insight?.trusted;
 
   return (
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-16">
-      <div className="flex items-end justify-between mb-8 flex-wrap gap-6">
-        <div>
-          <div className="micro text-smoke mb-2">{t('ranking.sectionTag')}</div>
-          <h2 className="serif text-3xl sm:text-4xl lg:text-5xl tracking-editorial">
-            {t('ranking.headlinePre')}<span className="serif-it text-brand">{t('ranking.headlineItalic')}</span>{t('ranking.headlinePost')}
-            {t('ranking.headlineLine2') ? <Fragment><br/>{t('ranking.headlineLine2')}</Fragment> : null}
-          </h2>
-        </div>
+      <div className="text-center mb-8">
+        <div className="micro text-smoke mb-3">{t('ranking.sectionTag')}</div>
+        <h2 className="serif text-3xl sm:text-4xl lg:text-5xl tracking-editorial">
+          {t('ranking.headlinePre')}<span className="serif-it text-brand">{t('ranking.headlineItalic')}</span>{t('ranking.headlinePost')}
+          {t('ranking.headlineLine2') ? <Fragment><br/>{t('ranking.headlineLine2')}</Fragment> : null}
+        </h2>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
           title={refreshing ? t('ranking.refreshing') : t('ranking.refreshNow')}
-          className="flex items-center gap-2 text-[12px] text-ash hover:text-bone disabled:hover:text-ash disabled:cursor-wait transition-colors px-2.5 py-1.5 border border-ink-600 hover:border-rule-2"
+          className="mt-5 inline-flex items-center gap-2 text-[12px] text-ash hover:text-bone disabled:hover:text-ash disabled:cursor-wait transition-colors px-2.5 py-1.5 border border-ink-600 hover:border-rule-2"
         >
           <I.refresh className={cx('w-3.5 h-3.5', refreshing && 'animate-spin')}/>
           <span>{refreshing ? t('ranking.refreshing') : t('ranking.refreshLabel', { ago: fmtAgo(now - lastRefresh) })}</span>
         </button>
       </div>
 
-      {/* FILTER BAR */}
-      <div className="border-y border-ink-600 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-0 bg-ink-800/40">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Dropdown label={t('ranking.labelModel')} value={MODELS.find(m=>m.id===model).display} options={MODELS.map(m=>({v:m.id,l:m.display}))} onChange={setModel}/>
-            <Dropdown label={t('ranking.labelRegion')} value={region==='all' ? t('ranking.regionAll') : region.toUpperCase()} options={[{v:'all',l:t('ranking.regionAll')},{v:'us',l:'US'},{v:'eu',l:'EU'},{v:'global',l:'Global'}]} onChange={setRegion}/>
-            <Dropdown label={t('ranking.labelAsOf')} value={t('ranking.windowLast' + ({'1h':'1h','24h':'24h','7d':'7d','30d':'30d'}[window]))} options={[{v:'1h',l:t('ranking.windowLast1h')},{v:'24h',l:t('ranking.windowLast24h')},{v:'7d',l:t('ranking.windowLast7d')},{v:'30d',l:t('ranking.windowLast30d')}]} onChange={setWindow}/>
-          </div>
-          <div className="flex items-center gap-1 overflow-x-auto no-scroll-x -mx-4 px-4 sm:-mx-0 sm:px-0">
-            <span className="micro text-smoke mr-3 shrink-0">{t('ranking.sortLabel')}</span>
-            {[
-              { v: 'cost', l: t('ranking.sortCheapest') },
-              { v: 'latency', l: t('ranking.sortFastest') },
-              { v: 'trust', l: t('ranking.sortMostTrusted') },
-              { v: 'overall', l: t('ranking.sortBestOverall') },
-            ].map(s => (
-              <button
-                key={s.v}
-                onClick={()=>setSort(s.v)}
-                className={cx('px-3 py-1.5 text-[12px] tracking-tight transition-colors shrink-0', sort===s.v ? 'text-ink bg-brand' : 'text-ash hover:text-bone')}
-              >
-                {s.l}
-              </button>
-            ))}
+      {/* FILTER BAR + TABLE — single bordered container so the side
+          borders run continuously through both and the corners close. */}
+      <div className="border border-ink-600 -mx-4 sm:-mx-6 lg:-mx-8">
+        {/* Filter bar */}
+        <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-ink-600 bg-ink-800/40">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Dropdown label={t('ranking.labelModel')} value={MODELS.find(m=>m.id===model).display} options={MODELS.map(m=>({v:m.id,l:m.display}))} onChange={setModel}/>
+            </div>
+            <div className="flex items-center gap-1 overflow-x-auto no-scroll-x -mx-4 px-4 sm:-mx-0 sm:px-0">
+              <span className="micro text-smoke mr-3 shrink-0">{t('ranking.sortLabel')}</span>
+              {[
+                { v: 'cost', l: t('ranking.sortCheapest') },
+                { v: 'latency', l: t('ranking.sortFastest') },
+                { v: 'trust', l: t('ranking.sortMostTrusted') },
+                { v: 'overall', l: t('ranking.sortBestOverall') },
+              ].map(s => (
+                <button
+                  key={s.v}
+                  onClick={()=>setSort(s.v)}
+                  className={cx('px-3 py-1.5 text-[12px] tracking-tight transition-colors shrink-0', sort===s.v ? 'text-ink bg-brand' : 'text-ash hover:text-bone')}
+                >
+                  {s.l}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* TABLE */}
-      <div className={cx(
-        'border-x border-b border-ink-600 -mx-4 sm:-mx-6 lg:-mx-8 transition-opacity duration-300',
-        refreshing && 'opacity-50 pointer-events-none'
+        {/* Table */}
+        <div className={cx(
+          'transition-opacity duration-300',
+          refreshing && 'opacity-50 pointer-events-none'
       )}>
         <div className="hidden lg:grid grid-cols-[64px_2fr_1.6fr_1.4fr_1.2fr_1.2fr_160px] px-8 py-3 micro text-smoke border-b border-ink-600 bg-ink-800/30">
           <div>{t('ranking.thRank')}</div>
           <div>{t('ranking.thProvider')}</div>
-          <div>{t('ranking.thCost')}</div>
-          <div>{t('ranking.thScore')}</div>
-          <div>{t('ranking.thSuccess')}</div>
-          <div>{t('ranking.thLatency')}</div>
+          <div className="flex items-center gap-1.5">
+            <span>{t('ranking.thCost')}</span>
+            <Tooltip content={t('ranking.thCostHint')}><I.info className="w-3 h-3"/></Tooltip>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>{t('ranking.thScore')}</span>
+            <Tooltip content={t('ranking.thScoreHint')}><I.info className="w-3 h-3"/></Tooltip>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>{t('ranking.thSuccess')}</span>
+            <Tooltip content={t('ranking.thSuccessHint')}><I.info className="w-3 h-3"/></Tooltip>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>{t('ranking.thLatency')}</span>
+            <Tooltip content={t('ranking.thLatencyHint')}><I.info className="w-3 h-3"/></Tooltip>
+          </div>
           <div className="text-right">{t('ranking.thAction')}</div>
         </div>
-        {filtered.map((p, i) => (
-          <RankingRow key={p.slug} p={p} rank={i+1} cheapest={cheapest} fastest={fastest} trusted={trusted}/>
-        ))}
+          {filtered.map((p, i) => (
+            <RankingRow key={p.slug} p={p} rank={i+1}/>
+          ))}
+        </div>
       </div>
 
-      {/* INSIGHT */}
-      {insight ? (
-        <div className="-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-5 border-b border-ink-600 bg-ink-800/30 flex flex-col md:flex-row md:items-center md:justify-between flex-wrap gap-3 md:gap-4">
-          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8 text-[13px]">
-            <span className="flex items-center gap-2"><span className="micro text-smoke">{t('ranking.insightCheapest')}</span><span className="text-brand">{insight.cheapest.name}</span><span className="num text-smoke">−{insight.cheapPct}%</span></span>
-            <span className="flex items-center gap-2"><span className="micro text-smoke">{t('ranking.insightMostTrusted')}</span><span className={trustTone(insight.trusted.trust)==='brand' ? 'text-brand' : trustTone(insight.trusted.trust)==='amber' ? 'text-amber' : 'text-coral'}>{insight.trusted.name}</span><span className="num text-smoke">{insight.trusted.trust}</span></span>
-            <span className="flex items-center gap-2"><span className="micro text-smoke">{t('ranking.insightBestOverall')}</span><span className="text-bone">{insight.overall.name}</span><span className="num text-smoke">{insight.overall.overall}</span></span>
-          </div>
-          <a href={`#/run?provider=${insight.cheapest.slug}`} className="btn-brand px-4 py-2 text-[12px] font-medium inline-flex items-center justify-center gap-2 self-start md:self-auto">
-            {t('ranking.useCheapest')} <I.arrow className="w-3.5 h-3.5"/>
-          </a>
-        </div>
-      ) : (
-        <div className="-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 border-b border-ink-600 bg-ink-800/30 text-center">
-          <div className="serif-it text-3xl text-ash">{t('ranking.noProviders')}</div>
-          <button onClick={()=>setRegion('all')} className="mt-3 micro text-brand hover:underline">{t('ranking.resetFilters')}</button>
-        </div>
-      )}
     </section>
   );
 }
 
-function RankingRow({ p, rank, cheapest, fastest, trusted }) {
+function RankingRow({ p, rank }) {
   const { t } = useLang();
   return (
     <Fragment>
-      {/* Desktop layout — grid */}
-      <div className="hidden lg:grid rank-row row-hover grid-cols-[64px_2fr_1.6fr_1.4fr_1.2fr_1.2fr_160px] px-8 py-5 items-center group fade-up">
+      {/* Desktop layout — grid · whole row links to provider detail via
+          stretched-link; the Run cell lifts to z-[2] to remain clickable. */}
+      <div className="hidden lg:grid rank-row row-hover grid-cols-[64px_2fr_1.6fr_1.4fr_1.2fr_1.2fr_160px] px-8 py-5 items-center group fade-up relative">
+        <a href={`#/providers/${p.slug}`} aria-label={p.name} className="absolute inset-0 z-[1]"/>
         <div>
           <div className="serif-it text-3xl text-ash group-hover:text-brand transition-colors">{rank}</div>
         </div>
-        <div>
-          <a href={`#/providers/${p.slug}`} className="block">
-            <div className="flex items-center gap-3">
-              <ProviderMark slug={p.slug} />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-bone tracking-tight">{p.name}</span>
-                </div>
-                <div className="micro text-smoke mt-0.5">{p.type} · {p.region}</div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <ProviderMark slug={p.slug} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-bone tracking-tight truncate group-hover:text-brand transition-colors">{p.name}</span>
               </div>
+              <ProviderDomainLink p={p}/>
             </div>
-          </a>
+          </div>
         </div>
         <div>
           <CostCell p={p} />
         </div>
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="num text-[15px] text-bone">{p.overall}</span>
+            <span className="num text-[14px] text-bone">{p.overall}</span>
             <TierChip tier={p.tier}/>
           </div>
         </div>
-        <div className="num text-[13px]">
+        <div className="num text-[14px]">
           <span className={p.success >= 0.99 ? 'text-brand' : p.success >= 0.97 ? 'text-bone' : 'text-amber'}>
             {fmtPct(p.success, 1)}
           </span>
         </div>
-        <div className="num text-[13px]">
+        <div className="num text-[14px]">
           <span className="text-bone">{p.latency.toFixed(1)}s</span>
           <span className="text-smoke text-[11px]"> / </span>
           <span className="text-ash">{p.p95.toFixed(1)}s</span>
         </div>
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="relative z-[2] flex items-center justify-end gap-1.5">
           <a href={`#/run?provider=${p.slug}`} className="btn-brand px-3 py-1.5 text-[12px] font-medium inline-flex items-center gap-1">
             {t('ranking.rowRun')} <I.arrow className="w-3 h-3"/>
           </a>
         </div>
       </div>
 
-      {/* Mobile layout — card */}
-      <div className="lg:hidden rank-row px-4 sm:px-6 py-5 fade-up">
-        <a href={`#/providers/${p.slug}`} className="flex items-start gap-3">
+      {/* Mobile layout — card · stretched link covers the entire card */}
+      <div className="lg:hidden rank-row row-hover px-4 sm:px-6 py-5 fade-up relative group">
+        <a href={`#/providers/${p.slug}`} aria-label={p.name} className="absolute inset-0 z-[1]"/>
+        <div className="flex items-start gap-3">
           <div className="serif-it text-3xl text-ash w-9 shrink-0 leading-none mt-1">{rank}</div>
           <ProviderMark slug={p.slug}/>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-bone tracking-tight text-[15px] truncate">{p.name}</span>
+              <span className="text-bone tracking-tight text-[15px] truncate group-hover:text-brand transition-colors">{p.name}</span>
             </div>
-            <div className="micro text-smoke mt-0.5 truncate">{p.type} · {p.region}</div>
+            <ProviderDomainLink p={p}/>
           </div>
-        </a>
+        </div>
         <div className="mt-4 grid grid-cols-2 gap-px bg-ink-600 border border-ink-600">
           <div className="bg-ink p-3">
-            <div className="micro text-smoke mb-1.5">{t('ranking.mob1MTok')}</div>
+            <div className="micro text-smoke mb-1.5 flex items-center gap-1.5">
+              <span>{t('ranking.thCost')}</span>
+              <Tooltip content={t('ranking.thCostHint')}><I.info className="w-3 h-3"/></Tooltip>
+            </div>
             <CostCell p={p}/>
           </div>
           <div className="bg-ink p-3">
-            <div className="micro text-smoke mb-1.5">{t('ranking.thScore')}</div>
+            <div className="micro text-smoke mb-1.5 flex items-center gap-1.5">
+              <span>{t('ranking.thScore')}</span>
+              <Tooltip content={t('ranking.thScoreHint')}><I.info className="w-3 h-3"/></Tooltip>
+            </div>
             <div className="flex items-baseline gap-2">
               <span className="num text-[14px] text-bone">{p.overall}</span>
               <TierChip tier={p.tier}/>
             </div>
           </div>
           <div className="bg-ink p-3">
-            <div className="micro text-smoke mb-1.5">{t('ranking.thLatency')}</div>
-            <div className="num text-[13px]">
+            <div className="micro text-smoke mb-1.5 flex items-center gap-1.5">
+              <span>{t('ranking.thLatency')}</span>
+              <Tooltip content={t('ranking.thLatencyHint')}><I.info className="w-3 h-3"/></Tooltip>
+            </div>
+            <div className="num text-[14px]">
               <span className="text-bone">{p.latency.toFixed(1)}s</span>
               <span className="text-smoke text-[11px]"> / </span>
               <span className="text-ash">{p.p95.toFixed(1)}s</span>
             </div>
           </div>
           <div className="bg-ink p-3">
-            <div className="micro text-smoke mb-1.5">{t('ranking.thSuccess')}</div>
-            <div className={cx('num text-[13px]', p.success >= 0.99 ? 'text-brand' : p.success >= 0.97 ? 'text-bone' : 'text-amber')}>
+            <div className="micro text-smoke mb-1.5 flex items-center gap-1.5">
+              <span>{t('ranking.thSuccess')}</span>
+              <Tooltip content={t('ranking.thSuccessHint')}><I.info className="w-3 h-3"/></Tooltip>
+            </div>
+            <div className={cx('num text-[14px]', p.success >= 0.99 ? 'text-brand' : p.success >= 0.97 ? 'text-bone' : 'text-amber')}>
               {fmtPct(p.success, 1)}
             </div>
           </div>
         </div>
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 relative z-[2] flex items-center gap-2">
           <a href={`#/run?provider=${p.slug}`} className="btn-brand flex-1 text-center px-3 py-2 text-[12px] font-medium inline-flex items-center justify-center gap-1">
             {t('ranking.rowRun')} <I.arrow className="w-3 h-3"/>
           </a>
@@ -3184,43 +3397,6 @@ function ModelDropdown({ value, onChange, disabled = false, showOwner = true }) 
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function InsightsRail() {
-  const { t } = useLang();
-  return (
-    <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-32">
-      <div className="grid md:grid-cols-2 gap-px bg-ink-600">
-        <Insight
-          tag={t('insights.costTag')}
-          title={t('insights.costTitle')}
-          body={t('insights.costBody')}
-          stat={{ label: t('insights.costStat'), value: '14', tone: 'amber' }}
-        />
-        <Insight
-          tag={t('insights.trustTag')}
-          title={t('insights.trustTitle')}
-          body={t('insights.trustBody')}
-          stat={{ label: t('insights.trustStat'), value: '6.2%', tone: 'coral' }}
-        />
-      </div>
-    </section>
-  );
-}
-
-function Insight({ tag, title, body, stat }) {
-  const t = { brand: 'text-brand', amber: 'text-amber', coral: 'text-coral' }[stat.tone];
-  return (
-    <div className="bg-ink p-5 sm:p-6 lg:p-8 group hover:bg-ink-800 transition-colors">
-      <div className="micro text-smoke">{tag}</div>
-      <h3 className="serif text-3xl tracking-editorial mt-3 leading-tight">{title}</h3>
-      <p className="mt-4 text-[14px] text-ash leading-relaxed">{body}</p>
-      <div className="mt-8 pt-5 border-t border-ink-600 flex items-baseline justify-between">
-        <span className="micro text-smoke">{stat.label}</span>
-        <span className={cx('serif text-4xl tracking-editorial', t)}>{stat.value}</span>
-      </div>
     </div>
   );
 }
@@ -4332,29 +4508,20 @@ function ProviderPage({ slug }) {
             <div>
               <div className="micro text-smoke flex items-center gap-2 flex-wrap">
                 <span>{p.type} · {p.region}</span>
-                {p.website && (() => {
-                  let label = p.website;
-                  try {
-                    const u = new URL(p.website);
-                    label = u.hostname === 'github.com'
-                      ? 'github.com' + u.pathname.replace(/\/$/, '')
-                      : u.hostname.replace(/^www\./, '');
-                  } catch {}
-                  return (
-                    <Fragment>
-                      <span>·</span>
-                      <a
-                        href={p.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-bone inline-flex items-center gap-1 transition-colors"
-                      >
-                        <span className="normal-case tracking-normal">{label}</span>
-                        <I.external className="w-2.5 h-2.5"/>
-                      </a>
-                    </Fragment>
-                  );
-                })()}
+                {p.website && (
+                  <Fragment>
+                    <span>·</span>
+                    <a
+                      href={p.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-bone inline-flex items-center gap-1 transition-colors"
+                    >
+                      <span className="normal-case tracking-normal">{websiteLabel(p.website)}</span>
+                      <I.external className="w-2.5 h-2.5"/>
+                    </a>
+                  </Fragment>
+                )}
               </div>
               <h1 className="serif text-4xl sm:text-5xl lg:text-6xl tracking-editorial">{p.name}</h1>
             </div>

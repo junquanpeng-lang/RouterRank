@@ -469,14 +469,31 @@ function costScore(observed, ref) {
   return 50;
 }
 
-// Raw provider data — `cost` and `trust` are derived below via .map
+// Raw provider data — `cost` / `costIn` / `costOut` / `costDelta` / `trust`
+// are derived below via .map from `modelPricing` for backward compatibility.
+//
+// `modelPricing` is the canonical price source: per supported (provider, model)
+// pair, we have a 4-tuple (listedIn, listedOut, observedIn, observedOut).
+// "listed" = what the router posts on its pricing page.
+// "observed" = what we measured. Currently mock, will be real T2 (probe panel).
+//
+// `incidents` are curated mocks tied to each provider's personality, each tagged
+// with the GatewayBench dimension that would flag it (L1.1 / L1.2 / L2.1 / ...).
 const PROVIDERS = [
   {
     slug: 'portkey', name: 'Portkey', type: 'gateway', domain: 'portkey.ai', website: 'https://portkey.ai',
     region: 'Global',
-    costIn: 5.55, costOut: 16.65, costDelta: 11, ref: 10.0,
     latency: 1.5, p95: 3.1, ttft: 0.35,
     success: 0.992, samples: 2418, overall: 87,
+    // Persona: production gateway · +3-5% listed markup · +0-2% observed drift
+    modelPricing: {
+      'openai/gpt-5.5':              { listedIn: 1.30, listedOut: 10.40, observedIn: 1.32, observedOut: 10.55 },
+      'anthropic/claude-4.6-sonnet': { listedIn: 3.12, listedOut: 15.60, observedIn: 3.13, observedOut: 15.65 },
+      'google/gemini-3.1-pro':       { listedIn: 1.30, listedOut: 10.40, observedIn: 1.32, observedOut: 10.50 },
+      'deepseek/deepseek-v3.2':      { listedIn: 0.28, listedOut: 1.14,  observedIn: 0.28, observedOut: 1.16  },
+      'meta/llama-4-maverick':       { listedIn: 0.28, listedOut: 0.88,  observedIn: 0.28, observedOut: 0.88  },
+      'mistral/mistral-large-2.1':   { listedIn: 2.08, listedOut: 6.24,  observedIn: 2.10, observedOut: 6.30  },
+    },
     scores: {
       L1: { modelAuth: 94, billingTrans: 92, cacheFraud: 88 },
       L2: { latency: 78, throughput: 82, longContext: 80 },
@@ -485,17 +502,30 @@ const PROVIDERS = [
     spark: [11.4, 11.6, 11.2, 11.0, 10.9, 11.1, 11.0, 11.1, 10.8, 11.1, 11.3, 11.1],
     trustParts: { modelConsistency: 92, providerMatch: 95, fallbackTransparency: 88, pricingIntegrity: 91, safety: 90 },
     incidents: [
-      { time: '4h ago', issue: 'Brief 5xx surge in EU during deploy', sev: 'low' },
-      { time: '2d ago', issue: 'Latency spike (p95 → 4.8s) for 7 min', sev: 'low' },
+      { time: '2h ago', issue: 'EU 区短暂 5xx surge during routing config rollout',
+        sev: 'low', dim: 'L2.1', duration: '4 min', affectedModels: ['openai/gpt-5.5'] },
+      { time: '3d ago', issue: 'GPT-5.5 token count 与本地分词器偏差 1.8%',
+        sev: 'low', dim: 'L1.2', duration: 'resolved', affectedModels: ['openai/gpt-5.5'] },
     ],
-    desc: 'Production-grade AI gateway with first-class observability, guardrails and routing controls.',
+    desc: {
+      en: 'Production-grade AI gateway. Built for teams that need observability, guardrails and routing controls layered on top of multi-model traffic. Listed prices sit slightly above upstream official, with mild observed drift.',
+      zh: '面向生产环境的 AI Gateway。给需要在多模型流量之上叠加可观测、护栏与路由控制的团队使用。标价略高于上游官方价，观测漂移较小。',
+    },
   },
   {
     slug: 'openrouter', name: 'OpenRouter', type: 'router', domain: 'openrouter.ai', website: 'https://openrouter.ai',
     region: 'US/EU',
-    costIn: 6.15, costOut: 18.45, costDelta: 23, ref: 10.0,
     latency: 1.2, p95: 2.7, ttft: 0.31,
     success: 0.985, samples: 5102, overall: 83,
+    // Persona: aggregator · +10-20% listed markup · +4-6% observed drift (notable surcharge + drift)
+    modelPricing: {
+      'openai/gpt-5.5':              { listedIn: 1.50, listedOut: 12.00, observedIn: 1.58, observedOut: 12.65 },
+      'anthropic/claude-4.6-sonnet': { listedIn: 3.45, listedOut: 17.25, observedIn: 3.55, observedOut: 17.70 },
+      'google/gemini-3.1-pro':       { listedIn: 1.45, listedOut: 11.50, observedIn: 1.52, observedOut: 12.05 },
+      'deepseek/deepseek-v3.2':      { listedIn: 0.32, listedOut: 1.32,  observedIn: 0.34, observedOut: 1.40  },
+      'meta/llama-4-maverick':       { listedIn: 0.30, listedOut: 0.95,  observedIn: 0.31, observedOut: 0.99  },
+      'mistral/mistral-large-2.1':   { listedIn: 2.30, listedOut: 6.90,  observedIn: 2.40, observedOut: 7.20  },
+    },
     scores: {
       L1: { modelAuth: 72, billingTrans: 82, cacheFraud: 72 },
       L2: { latency: 88, throughput: 82, longContext: 80 },
@@ -504,17 +534,32 @@ const PROVIDERS = [
     spark: [12.0, 11.8, 12.1, 12.6, 12.4, 12.2, 12.3, 12.5, 12.3, 12.1, 12.3, 12.3],
     trustParts: { modelConsistency: 78, providerMatch: 85, fallbackTransparency: 72, pricingIntegrity: 89, safety: 86 },
     incidents: [
-      { time: '2h ago', issue: 'Suspected fallback to non-canonical model', sev: 'medium' },
-      { time: '12h ago', issue: 'Pricing drift +6% for 40 min', sev: 'medium' },
+      { time: '5h ago', issue: '疑似静默回退 GPT-5.5 → GPT-5.0-mini · 47/210 sample 嵌入距离超阈值',
+        sev: 'medium', dim: 'L1.1', duration: 'investigating', affectedModels: ['openai/gpt-5.5'] },
+      { time: '1d ago', issue: 'DeepSeek 价格未通知上调 8% · 4h 后官网同步标价',
+        sev: 'medium', dim: 'L3.2', duration: '4 hr', affectedModels: ['deepseek/deepseek-v3.2'] },
+      { time: '4d ago', issue: 'Claude 长上下文 100k 衰减 BERTScore −0.04',
+        sev: 'low', dim: 'L2.3', duration: 'persistent', affectedModels: ['anthropic/claude-4.6-sonnet'] },
     ],
-    desc: 'Aggregator router across 100+ models with broad provider coverage.',
+    desc: {
+      en: 'Aggregator router covering 100+ models across the major upstream providers. Convenient single-API access trades off a ~10–20% gateway fee, and recent probes flagged suspected silent fallbacks to cheaper variants.',
+      zh: '覆盖 100+ 模型的聚合型路由中转，串联主流上游厂商。便捷的单 API 接入背后是 10–20% 的网关溢价，近期探测疑似存在静默回退到便宜模型的现象。',
+    },
   },
   {
     slug: 'bai', name: 'B.ai', type: 'router', domain: 'b.ai', website: 'https://b.ai',
     region: 'Global',
-    costIn: 4.90, costOut: 14.70, costDelta: -2, ref: 10.0,
     latency: 1.0, p95: 2.5, ttft: 0.28,
     success: 0.961, samples: 1834, overall: 79,
+    // Persona: budget aggregator · listed slightly UNDER official · observed +8% (silent surcharge - L1.2 red flag)
+    modelPricing: {
+      'openai/gpt-5.5':              { listedIn: 1.22, listedOut: 9.85,  observedIn: 1.32, observedOut: 10.62 },
+      'anthropic/claude-4.6-sonnet': { listedIn: 2.95, listedOut: 14.85, observedIn: 3.20, observedOut: 16.05 },
+      'google/gemini-3.1-pro':       { listedIn: 1.20, listedOut: 9.80,  observedIn: 1.30, observedOut: 10.55 },
+      'deepseek/deepseek-v3.2':      { listedIn: 0.26, listedOut: 1.08,  observedIn: 0.28, observedOut: 1.16  },
+      'meta/llama-4-maverick':       { listedIn: 0.26, listedOut: 0.83,  observedIn: 0.28, observedOut: 0.90  },
+      'mistral/mistral-large-2.1':   { listedIn: 1.95, listedOut: 5.90,  observedIn: 2.10, observedOut: 6.35  },
+    },
     scores: {
       L1: { modelAuth: 68, billingTrans: 78, cacheFraud: 65 },
       L2: { latency: 85, throughput: 78, longContext: 72 },
@@ -523,17 +568,28 @@ const PROVIDERS = [
     spark: [10.4, 10.1, 9.9, 9.6, 9.8, 9.5, 9.8, 9.7, 9.8, 9.9, 10.0, 9.8],
     trustParts: { modelConsistency: 71, providerMatch: 76, fallbackTransparency: 64, pricingIntegrity: 84, safety: 82 },
     incidents: [
-      { time: '1h ago', issue: 'Output token count divergence vs. peers', sev: 'medium' },
-      { time: '6h ago', issue: 'Higher refusal rate on safety prompts', sev: 'low' },
+      { time: '3h ago', issue: '安全 probe 集拒答率 +12pt · 影响 GPT-5.5 / Llama',
+        sev: 'medium', dim: 'L1.1', duration: 'ongoing',
+        affectedModels: ['openai/gpt-5.5', 'meta/llama-4-maverick'] },
+      { time: '12h ago', issue: '输出 token count 与同行偏差 4.7% · 已计入 billingTrans',
+        sev: 'medium', dim: 'L1.2', duration: 'persistent' },
     ],
-    desc: 'Cost-optimized aggregator with Asia-Pacific coverage and flexible routing.',
+    desc: {
+      en: 'Cost-optimized aggregator with Asia-Pacific coverage. Listed prices undercut upstream official, but observed billing runs about 8% higher than listed — a transparency gap currently under monitoring.',
+      zh: '面向亚太市场的低价聚合中转。标价低于上游官方价，但观测计费比标价约高 8% —— 这一透明度差距目前处于监测状态。',
+    },
   },
   {
     slug: 'together', name: 'Together AI', type: 'inference', domain: 'together.ai', website: 'https://together.ai',
     region: 'US',
-    costIn: 4.20, costOut: 12.60, costDelta: -16, ref: 10.0,
     latency: 0.9, p95: 2.1, ttft: 0.22,
     success: 0.994, samples: 4012, overall: 90,
+    // Persona: direct OSS inference · supports ONLY Llama/DeepSeek/Mistral · way below official · observed = listed (honest)
+    modelPricing: {
+      'meta/llama-4-maverick':     { listedIn: 0.22, listedOut: 0.65, observedIn: 0.22, observedOut: 0.65 },
+      'deepseek/deepseek-v3.2':    { listedIn: 0.20, listedOut: 0.85, observedIn: 0.20, observedOut: 0.85 },
+      'mistral/mistral-large-2.1': { listedIn: 1.40, listedOut: 4.20, observedIn: 1.40, observedOut: 4.20 },
+    },
     scores: {
       L1: { modelAuth: 90, billingTrans: 92, cacheFraud: 82 },
       L2: { latency: 92, throughput: 88, longContext: 82 },
@@ -541,15 +597,26 @@ const PROVIDERS = [
     },
     spark: [8.6, 8.5, 8.3, 8.2, 8.4, 8.3, 8.4, 8.5, 8.4, 8.3, 8.4, 8.4],
     trustParts: { modelConsistency: 90, providerMatch: 91, fallbackTransparency: 81, pricingIntegrity: 93, safety: 88 },
-    incidents: [{ time: '1d ago', issue: 'Cold-start latency on Llama variants', sev: 'low' }],
-    desc: 'Direct inference provider for open-weight models. High throughput, low latency.',
+    incidents: [
+      { time: '1d ago', issue: 'Llama 变体冷启 p95 → 4.2s · 单 region',
+        sev: 'low', dim: 'L2.1', duration: '9 min', affectedModels: ['meta/llama-4-maverick'] },
+    ],
+    desc: {
+      en: 'Direct inference provider for open-weight models. High throughput, low latency, and listed pricing that matches what we observe at the wire — no hidden markup. Currently supports the Llama, DeepSeek and Mistral families.',
+      zh: '直接面向开源模型的推理服务商。高吞吐、低延迟，标价与观测计费完全一致，无隐藏溢价。当前覆盖 Llama / DeepSeek / Mistral 三个系列。',
+    },
   },
   {
     slug: 'fireworks', name: 'Fireworks AI', type: 'inference', domain: 'fireworks.ai', website: 'https://fireworks.ai',
     region: 'US',
-    costIn: 4.45, costOut: 13.35, costDelta: -11, ref: 10.0,
     latency: 0.8, p95: 1.9, ttft: 0.19,
     success: 0.991, samples: 3502, overall: 89,
+    // Persona: same supported set as Together, slightly cheaper, observed = listed
+    modelPricing: {
+      'meta/llama-4-maverick':     { listedIn: 0.20, listedOut: 0.60, observedIn: 0.20, observedOut: 0.60 },
+      'deepseek/deepseek-v3.2':    { listedIn: 0.18, listedOut: 0.78, observedIn: 0.18, observedOut: 0.78 },
+      'mistral/mistral-large-2.1': { listedIn: 1.30, listedOut: 3.95, observedIn: 1.30, observedOut: 3.95 },
+    },
     scores: {
       L1: { modelAuth: 88, billingTrans: 89, cacheFraud: 85 },
       L2: { latency: 95, throughput: 92, longContext: 85 },
@@ -558,14 +625,21 @@ const PROVIDERS = [
     spark: [9.0, 8.8, 8.7, 9.0, 8.9, 8.9, 8.8, 8.9, 9.0, 8.9, 8.8, 8.9],
     trustParts: { modelConsistency: 88, providerMatch: 89, fallbackTransparency: 79, pricingIntegrity: 90, safety: 86 },
     incidents: [],
-    desc: 'High-speed inference with FireAttention runtime for OSS models.',
+    desc: {
+      en: 'High-speed OSS inference powered by their in-house FireAttention runtime. Currently the fastest provider in this set on Llama and DeepSeek, with observed pricing identical to what is listed.',
+      zh: '基于自研 FireAttention 运行时的高速开源模型推理。在 Llama / DeepSeek 上是当前榜单里最快的中转，观测价与标价完全一致。',
+    },
   },
   {
     slug: 'anyscale', name: 'Anyscale', type: 'inference', domain: 'anyscale.com', website: 'https://www.anyscale.com',
     region: 'US/EU',
-    costIn: 5.25, costOut: 15.75, costDelta: 5, ref: 10.0,
     latency: 1.4, p95: 3.4, ttft: 0.42,
     success: 0.978, samples: 1422, overall: 78,
+    // Persona: Ray-based · supports ONLY Llama/DeepSeek · mid-priced · slight observed drift
+    modelPricing: {
+      'meta/llama-4-maverick':  { listedIn: 0.27, listedOut: 0.85, observedIn: 0.28, observedOut: 0.87 },
+      'deepseek/deepseek-v3.2': { listedIn: 0.28, listedOut: 1.12, observedIn: 0.29, observedOut: 1.14 },
+    },
     scores: {
       L1: { modelAuth: 82, billingTrans: 82, cacheFraud: 72 },
       L2: { latency: 72, throughput: 78, longContext: 78 },
@@ -573,15 +647,26 @@ const PROVIDERS = [
     },
     spark: [10.3, 10.4, 10.6, 10.5, 10.7, 10.4, 10.5, 10.5, 10.6, 10.4, 10.5, 10.5],
     trustParts: { modelConsistency: 82, providerMatch: 83, fallbackTransparency: 74, pricingIntegrity: 85, safety: 78 },
-    incidents: [{ time: '3h ago', issue: 'p95 latency drift +18%', sev: 'low' }],
-    desc: 'Ray-based scalable inference across Llama, Mixtral and DeepSeek families.',
+    incidents: [
+      { time: '3h ago', issue: '单 region p95 latency drift +18%',
+        sev: 'low', dim: 'L2.1', duration: '22 min', affectedModels: ['meta/llama-4-maverick'] },
+      { time: '5d ago', issue: 'DeepSeek 推理排队 > 30s · 高峰段',
+        sev: 'low', dim: 'L2.2', duration: '1.5 hr', affectedModels: ['deepseek/deepseek-v3.2'] },
+    ],
+    desc: {
+      en: 'Ray-based scalable inference focused on Llama and DeepSeek families. Mid-priced with occasional cold-start tail latency on single-region traffic — a known shape of cost when scaling shared GPUs.',
+      zh: '基于 Ray 的可扩展推理，聚焦 Llama / DeepSeek 系列。中等定价，单 region 流量偶有冷启尾延迟 —— 共享 GPU 扩缩容时的已知问题。',
+    },
   },
   {
     slug: 'replicate', name: 'Replicate', type: 'inference', domain: 'replicate.com', website: 'https://replicate.com',
     region: 'Global',
-    costIn: 6.80, costOut: 20.40, costDelta: 36, ref: 10.0,
     latency: 1.8, p95: 4.2, ttft: 0.55,
     success: 0.969, samples: 928, overall: 71,
+    // Persona: marketplace · supports ONLY Llama · expensive · +6% observed drift
+    modelPricing: {
+      'meta/llama-4-maverick': { listedIn: 0.40, listedOut: 1.20, observedIn: 0.42, observedOut: 1.28 },
+    },
     scores: {
       L1: { modelAuth: 78, billingTrans: 80, cacheFraud: 70 },
       L2: { latency: 62, throughput: 72, longContext: 78 },
@@ -589,15 +674,31 @@ const PROVIDERS = [
     },
     spark: [13.2, 13.4, 13.6, 13.8, 13.5, 13.6, 13.7, 13.6, 13.4, 13.6, 13.7, 13.6],
     trustParts: { modelConsistency: 79, providerMatch: 80, fallbackTransparency: 70, pricingIntegrity: 81, safety: 75 },
-    incidents: [{ time: '8h ago', issue: 'Cold-start spikes on shared GPUs', sev: 'medium' }],
-    desc: 'Marketplace of model variants. Convenience-first, less optimized for cost.',
+    incidents: [
+      { time: '8h ago', issue: '共享 GPU cold-start spike up to 8s · 影响多模型',
+        sev: 'medium', dim: 'L2.1', duration: '1 hr', affectedModels: ['meta/llama-4-maverick'] },
+      { time: '2d ago', issue: 'Llama 4 路由切换导致单次失败',
+        sev: 'low', dim: 'L2.1', duration: 'single request', affectedModels: ['meta/llama-4-maverick'] },
+    ],
+    desc: {
+      en: 'Marketplace of community-uploaded model variants. Convenience-first — easy to deploy obscure forks and custom checkpoints — but flagship OSS pricing runs well above direct inference providers.',
+      zh: '社区上传模型变体的市场化平台。强调便利性 —— 部署小众分叉与自定义 checkpoint 很方便 —— 但旗舰开源模型的价格明显高于直接推理服务商。',
+    },
   },
   {
     slug: 'litellm', name: 'LiteLLM', type: 'self_host', domain: null, website: 'https://github.com/BerriAI/litellm',
     region: 'Self-hosted',
-    costIn: 5.00, costOut: 15.00, costDelta: 0, ref: 10.0,
     latency: 1.1, p95: 2.4, ttft: 0.30,
     success: 0.988, samples: 612, overall: 82,
+    // Persona: OSS self-host proxy · supports all 6 · listed = official (pass-through) · observed = listed (no markup)
+    modelPricing: {
+      'openai/gpt-5.5':              { listedIn: 1.25, listedOut: 10.00, observedIn: 1.25, observedOut: 10.00 },
+      'anthropic/claude-4.6-sonnet': { listedIn: 3.00, listedOut: 15.00, observedIn: 3.00, observedOut: 15.00 },
+      'google/gemini-3.1-pro':       { listedIn: 1.25, listedOut: 10.00, observedIn: 1.25, observedOut: 10.00 },
+      'deepseek/deepseek-v3.2':      { listedIn: 0.27, listedOut: 1.10,  observedIn: 0.27, observedOut: 1.10  },
+      'meta/llama-4-maverick':       { listedIn: 0.27, listedOut: 0.85,  observedIn: 0.27, observedOut: 0.85  },
+      'mistral/mistral-large-2.1':   { listedIn: 2.00, listedOut: 6.00,  observedIn: 2.00, observedOut: 6.00  },
+    },
     scores: {
       L1: { modelAuth: 88, billingTrans: 92, cacheFraud: 82 },
       L2: { latency: 80, throughput: 75, longContext: 78 },
@@ -605,16 +706,35 @@ const PROVIDERS = [
     },
     spark: [10.0, 10.1, 9.9, 10.0, 10.0, 9.9, 10.1, 10.0, 10.0, 10.1, 9.9, 10.0],
     trustParts: { modelConsistency: 85, providerMatch: 88, fallbackTransparency: 86, pricingIntegrity: 95, safety: 80 },
-    incidents: [],
-    desc: 'Open-source proxy. Pricing reflects upstream cost only — true pass-through.',
+    incidents: [
+      { time: '6h ago', issue: 'GPT-5.5 上游限流 → 5% 失败 in 12 min',
+        sev: 'low', dim: 'L2.1', duration: '12 min', affectedModels: ['openai/gpt-5.5'] },
+    ],
+    desc: {
+      en: 'Open-source proxy you run yourself. Pricing reflects upstream cost only — true pass-through with zero markup. You own the infrastructure, the gateway just unifies the API surface.',
+      zh: '你自己部署运行的开源代理。价格完全反映上游成本 —— 纯透传、零溢价。基础设施由你掌控，gateway 只负责统一 API 接口。',
+    },
   },
 ].map(p => {
-  const cost = Math.round(((p.costIn + p.costOut) / 2) * 100) / 100;
+  // Pick a "default model" for blended ranking-row display: prefer GPT-5.5 if
+  // supported, else first key in modelPricing. This drives the legacy
+  // costIn / costOut / cost / costDelta fields used by the ranking table.
+  const DEFAULT_MODEL_ID = 'openai/gpt-5.5';
+  const supportedIds = Object.keys(p.modelPricing);
+  const defaultId = supportedIds.includes(DEFAULT_MODEL_ID) ? DEFAULT_MODEL_ID : supportedIds[0];
+  const mp = p.modelPricing[defaultId];
+  const costIn = mp.listedIn;
+  const costOut = mp.listedOut;
+  const cost = Math.round(((costIn + costOut) / 2) * 100) / 100;
+  // costDelta = listed blended cost vs official blended cost, for the default model
+  const defaultModel = MODELS.find(m => m.id === defaultId);
+  const refBlended = defaultModel ? (defaultModel.officialIn + defaultModel.officialOut) / 2 : cost;
+  const costDelta = refBlended > 0 ? Math.round(((cost - refBlended) / refBlended) * 100) : 0;
   const L1 = computeL1(p.scores);
   const L2 = computeL2(p.scores);
   const L3 = computeL3(p.scores);
   const overall = Math.round(L1 * 0.4 + L3 * 0.4 + L2 * 0.2);
-  return { ...p, cost, trust: L1, L1, L2, L3, overall, tier: tier(overall) };
+  return { ...p, costIn, costOut, cost, costDelta, defaultModelId: defaultId, trust: L1, L1, L2, L3, overall, tier: tier(overall) };
 });
 
 // Aggregate stats — derived once from PROVIDERS, used by Hero / Header / etc.
@@ -1663,24 +1783,36 @@ const I18N = {
     provider: {
       notFound: 'Provider not found.',
       backToRanking: 'Ranking',
-      openInRun: 'Open in Run',
+      openInRun: 'Use this provider',
       m1MTokInOut: '1M tok (in/out)',
       mP50Latency: 'p50 latency',
       mP95: 'p95 {v}s',
       mSuccess: 'Success',
       mSamples: '{n} samples',
       tagCost: '§01 · Cost',
-      headObservedVsOfficial: 'Observed cost vs. official',
-      observedHigher: 'Observed cost is {pct}% higher than the official reference price for the past 24 hours.',
-      observedLower: 'Observed cost is {pct}% lower than the official reference price for the past 24 hours.',
-      per1M: 'Per 1M tokens · 1:3 in/out blend',
-      observed: 'observed',
+      headObservedVsOfficial: 'Per-model price breakdown',
+      noModelPricing: 'No per-model pricing data published for this router.',
+      // Summary line: "{name} ranges across {n} models · listed avg [+X.X%] vs official · observed avg [+Y.Y%] vs listed."
+      costSummaryPre: '{name} covers {n} models · listed avg',
+      costSummaryMid: 'vs official · observed avg',
+      costSummaryPost: 'vs listed.',
+      billingClean: 'Billing clean · L1.2',
+      billingMinor: 'Minor drift · L1.2',
+      billingConcern: 'Concerning · L1.2',
+      previewChip: 'Preview',
       observedShort: 'Observed',
-      officialReference: 'Official reference',
-      reference: 'Reference',
-      input: 'Input',
-      output: 'Output',
-      ref: 'ref',
+      officialPrice: 'Official',
+      colModel: 'Model',
+      colOfficial: 'Official (in/out)',
+      colListed: 'Listed (in/out)',
+      colObserved: 'Observed (in/out)',
+      colObservedNote: 'WHAT YOU ACTUALLY PAY',
+      colOfficialShort: 'Official',
+      colListedShort: 'Listed',
+      colObservedShort: 'Observed',
+      selectModel: 'Model',
+      observedFootnote: 'Observed prices · ~{samples} samples over past {window} (mock)',
+      costAnalyzerTitle: 'Cost analyzer',
       perTypicalChat: 'Per typical chat · {inTok} in + {outTok} out tokens',
       colMatch: 'Match',
       colYouSave: 'You save',
@@ -1706,18 +1838,50 @@ const I18N = {
       sub32: 'vs Official',
       sub33: 'Hidden Cost',
       overallFormula: 'Overall = 0.4·L1 + 0.4·L3 + 0.2·L2 =',
-      methodology: 'methodology →',
+      methodology: 'methodology',
       trustVelocity: 'Trust velocity',
       trendImproving: 'improving',
       trendDegrading: 'degrading',
       trendStable: 'stable',
       trustOver30d: '({delta} over 30d)',
-      tagIncidents: '§03 · Recent incidents',
+      tagIncidents: '§04 · Recent incidents',
       noIncidents: 'No incidents in the past 7 days.',
       sevHigh: 'high',
       sevMed: 'medium',
       sevLow: 'low',
-      tagFingerprint: '§04 · Model fingerprint',
+      tagFingerprint: '§03 · Model fingerprint',
+      // Top metrics
+      mTtft: 'TTFT (p50)',
+      mTtftSub: 'p95 {ms}ms',
+      // ScoreSidebar
+      sidebarScoreLabel: 'Overall score',
+      sidebarRecent7d: 'Last 7d',
+      sidebarNoEvents: 'No events',
+      sidebarEventsCount: '{n} event(s)',
+      sidebarFormula: 'Formula',
+      // PerformanceSection — all latency metrics are TTFT (time-to-first-token) percentiles
+      tagPerformance: '§02 · Performance (L2)',
+      headPerformance: 'TTFT, throughput, long-context decay',
+      perfSummary: 'All latency tiles below are TTFT (time-to-first-token) percentiles · based on ~{samples} probes over past 7 days.',
+      perfP50: 'p50 TTFT',
+      perfP50Hint: 'Median time-to-first-token across recent probes. The "typical" first-byte delay you can expect — drives chat / streaming UX.',
+      perfP95: 'p95 TTFT',
+      perfP95Hint: '95th-percentile time-to-first-token — the slowest 5% of starts. Your tail-end first-byte experience under load.',
+      perfP99: 'p99 TTFT',
+      perfP99Hint: '99th-percentile time-to-first-token — true worst-case first-byte latency. Critical for SLA and agent loops.',
+      perfSuccess: 'Success',
+      perfSuccessHint: 'Share of probes returning a non-empty response within the SLA window.',
+      perfTrend7d: '7-day p50 TTFT trend',
+      perfTrendUnit: 'milliseconds',
+      perfTrendHover: 'Hover for daily value',
+      trendRange: '7d range',
+      trendToday: 'today',
+      trendDaysAgo: '{n}d ago',
+      perfRegional: 'Regional p50 TTFT',
+      perfThroughput: 'Throughput (tok/s)',
+      perfThroughputNote: 'Requires concurrent load testing · T2 roadmap',
+      perfLongContext: 'Long-context decay',
+      perfLongContextNote: 'Requires quality eval pipeline · T2 roadmap',
       headDidYouGet: 'Did you actually get',
       runLiveValidation: 'Run live validation',
       refreshNightly: 'Refresh nightly',
@@ -1741,13 +1905,6 @@ const I18N = {
       fpUnsupportedTag: 'Unsupported · honest by omission',
       fpUnsupportedTitle: '{name} does not serve {model} directly.',
       fpUnsupportedNote: 'The honest answer is the absence of a fingerprint. We surface it explicitly rather than fabricate one.',
-      tagSupportedModels: '§05 · Supported models',
-      smModel: 'Model',
-      smStreaming: 'Streaming',
-      smToolCalling: 'Tool calling',
-      smJsonSchema: 'JSON schema',
-      smZdr: 'ZDR',
-      smPriceInOut: 'Price (in/out)',
       trustHistoryLabel: 'Trust · 30d',
       streakLabel: 'streak',
       recoveryLabel: 'recovery',
@@ -2272,24 +2429,36 @@ const I18N = {
     provider: {
       notFound: '未找到该中转站。',
       backToRanking: '榜单',
-      openInRun: '在 Run 中打开',
+      openInRun: '使用服务',
       m1MTokInOut: '1M tok (输入/输出)',
       mP50Latency: 'p50 延迟',
       mP95: 'p95 {v}s',
       mSuccess: '成功率',
       mSamples: '{n} 次采样',
       tagCost: '§01 · 成本',
-      headObservedVsOfficial: '观测成本 vs. 官方价',
-      observedHigher: '过去 24 小时,观测成本相对官方参考价高 {pct}%。',
-      observedLower: '过去 24 小时,观测成本相对官方参考价低 {pct}%。',
-      per1M: '每 1M tokens · 输入:输出 = 1:3 混合',
-      observed: '观测值',
-      observedShort: '观测值',
-      officialReference: '官方参考价',
-      reference: '参考价',
-      input: '输入',
-      output: '输出',
-      ref: '参考',
+      headObservedVsOfficial: '各模型价格拆解',
+      noModelPricing: '该中转站暂无公开的模型定价数据。',
+      // 总结句:"{name} 覆盖 {n} 个模型 · 标价平均比官方价 [+X.X%] · 观测价平均比标价 [+Y.Y%]。"
+      costSummaryPre: '{name} 覆盖 {n} 个模型 · 标价平均比官方价',
+      costSummaryMid: ' · 观测价平均比标价',
+      costSummaryPost: '。',
+      billingClean: '计费可信 · L1.2',
+      billingMinor: '轻微偏离 · L1.2',
+      billingConcern: '计费存疑 · L1.2',
+      previewChip: '预览',
+      observedShort: '观测价',
+      officialPrice: '官方价',
+      colModel: '模型',
+      colOfficial: '官方价 (in/out)',
+      colListed: '中转站标价 (in/out)',
+      colObserved: '观测价 (in/out)',
+      colObservedNote: '你实际支付的金额',
+      colOfficialShort: '官方',
+      colListedShort: '标价',
+      colObservedShort: '观测',
+      selectModel: '模型',
+      observedFootnote: '观测价 · 基于过去 {window} 约 {samples} 个样本 (mock)',
+      costAnalyzerTitle: '成本分析器',
       perTypicalChat: '典型一次对话 · 输入 {inTok} + 输出 {outTok} tokens',
       colMatch: '持平',
       colYouSave: '节省',
@@ -2315,18 +2484,50 @@ const I18N = {
       sub32: '相对官方价',
       sub33: '隐性成本',
       overallFormula: '综合分 = 0.4·L1 + 0.4·L3 + 0.2·L2 =',
-      methodology: '方法论 →',
+      methodology: '方法论',
       trustVelocity: '信任度变化趋势',
       trendImproving: '改善中',
       trendDegrading: '恶化中',
       trendStable: '稳定',
       trustOver30d: '(30 日 {delta})',
-      tagIncidents: '§03 · 近期事件',
+      tagIncidents: '§04 · 近期事件',
       noIncidents: '过去 7 天无事件。',
       sevHigh: '高',
       sevMed: '中',
       sevLow: '低',
-      tagFingerprint: '§04 · 模型指纹',
+      tagFingerprint: '§03 · 模型指纹',
+      // Top metrics
+      mTtft: 'TTFT (p50)',
+      mTtftSub: 'p95 {ms}ms',
+      // ScoreSidebar
+      sidebarScoreLabel: '综合评分',
+      sidebarRecent7d: '近 7 日',
+      sidebarNoEvents: '无事件',
+      sidebarEventsCount: '{n} 个事件',
+      sidebarFormula: '公式',
+      // PerformanceSection — 所有延迟指标都是 TTFT (首 token 延迟) 的分位数
+      tagPerformance: '§02 · 性能 (L2)',
+      headPerformance: 'TTFT、吞吐、长上下文衰减',
+      perfSummary: '下方所有延迟数据都是 TTFT (首 token 延迟) 的分位数 · 基于过去 7 天约 {samples} 个探测样本。',
+      perfP50: 'p50 TTFT',
+      perfP50Hint: '近期探测的 TTFT 中位数 · 最常见的首字节延迟。决定聊天 / 流式场景的体感。',
+      perfP95: 'p95 TTFT',
+      perfP95Hint: '95 分位的 TTFT · 最慢的 5% 启动。中转站繁忙时你能感受到的首字节尾部体感。',
+      perfP99: 'p99 TTFT',
+      perfP99Hint: '99 分位的 TTFT · 真正的最差首字节延迟。SLA 与 agent 多步循环最关心这个。',
+      perfSuccess: '成功率',
+      perfSuccessHint: '探测请求中在 SLA 窗口内返回非空响应的占比。',
+      perfTrend7d: '7 日 p50 TTFT 趋势',
+      perfTrendUnit: '毫秒',
+      perfTrendHover: '悬停查看当日数据',
+      trendRange: '7 日区间',
+      trendToday: '今日',
+      trendDaysAgo: '{n} 天前',
+      perfRegional: '各区域 p50 TTFT',
+      perfThroughput: '吞吐量 (tok/s)',
+      perfThroughputNote: '需要并发负载测试 · T2 路线图',
+      perfLongContext: '长上下文衰减',
+      perfLongContextNote: '需要 quality eval pipeline · T2 路线图',
       headDidYouGet: '你拿到的真的是',
       runLiveValidation: '运行实时验证',
       refreshNightly: '每日刷新',
@@ -2350,13 +2551,6 @@ const I18N = {
       fpUnsupportedTag: '不支持 · 不掩饰',
       fpUnsupportedTitle: '{name} 不直接提供 {model}。',
       fpUnsupportedNote: '诚实的答案是没有指纹。我们明确披露这一点,而非编造一个。',
-      tagSupportedModels: '§05 · 支持的模型',
-      smModel: '模型',
-      smStreaming: '流式',
-      smToolCalling: '工具调用',
-      smJsonSchema: 'JSON schema',
-      smZdr: 'ZDR',
-      smPriceInOut: '价格 (输入/输出)',
       trustHistoryLabel: '信任分 · 30 天',
       streakLabel: '连续',
       recoveryLabel: '恢复',
@@ -2697,12 +2891,25 @@ function TierChip({ tier: t, size = 'sm' }) {
   );
 }
 
-function CostCell({ p }) {
+// Resolve (provider, modelId) → blended listed cost; falls back to provider's
+// default model when modelId is unsupported. Returns null when the provider
+// has no pricing for that model at all (caller can decide to filter the row).
+function costForModel(p, modelId) {
+  const mp = p.modelPricing && p.modelPricing[modelId];
+  if (!mp) return null;
+  return { in: mp.listedIn, out: mp.listedOut, blended: (mp.listedIn + mp.listedOut) / 2 };
+}
+
+function CostCell({ p, modelId }) {
+  // Prefer the active model's listed price; fall back to provider default
+  const target = modelId ? costForModel(p, modelId) : null;
+  const inP  = target ? target.in  : p.costIn;
+  const outP = target ? target.out : p.costOut;
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="num text-[14px] tracking-tight text-bone">{fmtUSD(p.costIn)}</span>
+      <span className="num text-[14px] tracking-tight text-bone">{fmtUSD(inP)}</span>
       <span className="text-smoke text-[11px]">/</span>
-      <span className="num text-[14px] text-bone">{fmtUSD(p.costOut)}</span>
+      <span className="num text-[14px] text-bone">{fmtUSD(outP)}</span>
     </div>
   );
 }
@@ -2804,6 +3011,141 @@ function Sparkline({ data, color = 'currentColor', w = 80, h = 22 }) {
     <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="block">
       <polyline points={pts} className="spark" stroke={color} />
     </svg>
+  );
+}
+
+// Editorial-style 7d trend chart. Restraint-first design:
+//   • Line + area fill is the headline; no Y-axis number tower.
+//   • Header line carries the range (e.g. "348-350 ms") and updates with hover.
+//   • Bottom shows only the time bounds ("7 天前" / "今日").
+//   • Smooth Bezier (horizontal-tangent at each point) for editorial flow.
+function TtftTrendChart({ data, color = 'rgb(var(--sky))' }) {
+  const { t } = useLang();
+  const [hoverIdx, setHoverIdx] = useState(null);
+  if (!data?.length) return null;
+
+  const valuesMs = data.map(s => Math.round(s * 1000));
+  const min = Math.min(...valuesMs);
+  const max = Math.max(...valuesMs);
+
+  // SVG geometry. Generous internal padding so points don't kiss edges.
+  const w = 540, h = 96;
+  const padL = 4, padR = 4, padT = 8, padB = 22;
+  const innerW = w - padL - padR;
+  const innerH = h - padT - padB;
+
+  // Add 30% of range as headroom (or +/-1ms if range = 0)
+  const range = max - min;
+  const yPad = range === 0 ? 1 : range * 0.3;
+  const yMin = min - yPad;
+  const yMax = max + yPad;
+  const yRange = yMax - yMin || 1;
+
+  const x = (i) => padL + (i / (data.length - 1)) * innerW;
+  const y = (v) => padT + innerH - ((v - yMin) / yRange) * innerH;
+
+  // Smooth Bezier path with horizontal tangents (clean editorial curves)
+  const linePath = (() => {
+    const pts = valuesMs.map((v, i) => [x(i), y(v)]);
+    let d = `M ${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
+    for (let i = 1; i < pts.length; i++) {
+      const [px, py] = pts[i - 1];
+      const [cx, cy] = pts[i];
+      const midX = (px + cx) / 2;
+      d += ` C ${midX.toFixed(2)},${py.toFixed(2)} ${midX.toFixed(2)},${cy.toFixed(2)} ${cx.toFixed(2)},${cy.toFixed(2)}`;
+    }
+    return d;
+  })();
+  const areaPath = `${linePath} L ${x(data.length - 1).toFixed(2)},${(padT + innerH).toFixed(2)} L ${padL.toFixed(2)},${(padT + innerH).toFixed(2)} Z`;
+
+  const onMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const xPos = ((e.clientX - rect.left) / rect.width) * w;
+    const relX = xPos - padL;
+    if (relX < -8 || relX > innerW + 8) { setHoverIdx(null); return; }
+    const step = innerW / (data.length - 1);
+    const idx = Math.max(0, Math.min(data.length - 1, Math.round(relX / step)));
+    setHoverIdx(idx);
+  };
+
+  // Inline 11px monospace text — quiet, matches the page's `text-[11px] num` style
+  const labelStyle = { fontSize: '11px', fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontWeight: 400 };
+
+  const daysAgo = (i) => data.length - 1 - i;
+  const hoverLabel = hoverIdx === null ? null
+    : daysAgo(hoverIdx) === 0 ? t('provider.trendToday')
+    : t('provider.trendDaysAgo', { n: daysAgo(hoverIdx) });
+
+  // Stable gradient id (per slug or hash if multiple charts on page — for our single use case, static is fine)
+  const gradId = 'ttft-area-fill';
+
+  return (
+    <div>
+      {/* Header line: range on the left, hover details (or empty) on the right */}
+      <div className="flex items-baseline justify-between mb-2 gap-2 flex-wrap">
+        <span className="text-[11px] text-smoke num">
+          {t('provider.trendRange')}{' '}
+          <span className="text-bone">{min}{min === max ? '' : `–${max}`}</span>{' '}
+          <span className="text-smoke">ms</span>
+        </span>
+        {hoverIdx !== null && (
+          <span className="text-[11px] num">
+            <span className="text-smoke">{hoverLabel}</span>
+            <span className="text-smoke px-1.5">·</span>
+            <span className="text-bone">{valuesMs[hoverIdx]} ms</span>
+          </span>
+        )}
+      </div>
+
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="block w-full"
+        onMouseMove={onMove}
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <defs>
+          <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%"   stopColor={color} stopOpacity="0.18"/>
+            <stop offset="100%" stopColor={color} stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+
+        {/* Subtle horizontal baseline (where data sits in middle) */}
+        <line x1={padL} x2={w - padR}
+          y1={padT + innerH - 0.5} y2={padT + innerH - 0.5}
+          stroke="rgb(var(--ink-700))" strokeWidth="0.5"/>
+
+        {/* Area fill under the curve */}
+        <path d={areaPath} fill={`url(#${gradId})`}/>
+
+        {/* Smooth trend line */}
+        <path d={linePath}
+          fill="none" stroke={color} strokeWidth="1.5"
+          strokeLinecap="round" strokeLinejoin="round"/>
+
+        {/* Bottom-corner time labels — only two, at edges */}
+        <text x={padL + 2} y={h - 6} fill="rgb(var(--smoke))" style={labelStyle}>
+          {t('provider.trendDaysAgo', { n: data.length - 1 })}
+        </text>
+        <text x={w - padR - 2} y={h - 6} fill="rgb(var(--smoke))" textAnchor="end" style={labelStyle}>
+          {t('provider.trendToday')}
+        </text>
+
+        {/* Hover: vertical guide + emphasized dot (no overlay tooltip — info is in header) */}
+        {hoverIdx !== null && (() => {
+          const cx_ = x(hoverIdx);
+          const cy_ = y(valuesMs[hoverIdx]);
+          return (
+            <g>
+              <line x1={cx_} x2={cx_} y1={padT} y2={padT + innerH}
+                stroke={color} strokeDasharray="2,3" opacity="0.4"/>
+              <circle cx={cx_} cy={cy_} r="3.5"
+                fill="rgb(var(--paper))" stroke={color} strokeWidth="1.5"/>
+            </g>
+          );
+        })()}
+      </svg>
+    </div>
   );
 }
 
@@ -3023,15 +3365,21 @@ function RankingSection() {
   };
 
   const filtered = useMemo(() => {
-    let data = [...PROVIDERS];
+    // Filter out providers that don't support the currently selected model —
+    // they have no pricing data to compete on, so they're hidden from the board.
+    let data = PROVIDERS.filter(p => p.modelPricing && p.modelPricing[model]);
     if (region !== 'all') data = data.filter(p => p.region.toLowerCase().includes(region));
+    const blendedCost = (p) => {
+      const c = costForModel(p, model);
+      return c ? c.blended : Infinity;
+    };
     const sortKey = {
       overall: (a, b) => b.overall - a.overall,
-      cost: (a, b) => a.cost - b.cost,
+      cost: (a, b) => blendedCost(a) - blendedCost(b),
       trust: (a, b) => b.trust - a.trust,
       latency: (a, b) => a.latency - b.latency,
     }[sort];
-    return data.sort(sortKey);
+    return [...data].sort(sortKey);
   }, [model, sort, region]);
 
 
@@ -3088,16 +3436,16 @@ function RankingSection() {
           'transition-opacity duration-300',
           refreshing && 'opacity-50 pointer-events-none'
       )}>
-        <div className="hidden lg:grid grid-cols-[64px_2fr_1.6fr_1.4fr_1.2fr_1.2fr_160px] px-8 py-3 micro text-smoke border-b border-ink-600 bg-ink-800/30">
+        <div className="hidden lg:grid grid-cols-[64px_2fr_1.4fr_1.6fr_1.2fr_1.2fr_160px] px-8 py-3 micro text-smoke border-b border-ink-600 bg-ink-800/30">
           <div>{t('ranking.thRank')}</div>
           <div>{t('ranking.thProvider')}</div>
           <div className="flex items-center gap-1.5">
-            <span>{t('ranking.thCost')}</span>
-            <Tooltip content={t('ranking.thCostHint')}><I.info className="w-3 h-3"/></Tooltip>
-          </div>
-          <div className="flex items-center gap-1.5">
             <span>{t('ranking.thScore')}</span>
             <Tooltip content={t('ranking.thScoreHint')}><I.info className="w-3 h-3"/></Tooltip>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>{t('ranking.thCost')}</span>
+            <Tooltip content={t('ranking.thCostHint')}><I.info className="w-3 h-3"/></Tooltip>
           </div>
           <div className="flex items-center gap-1.5">
             <span>{t('ranking.thSuccess')}</span>
@@ -3110,7 +3458,7 @@ function RankingSection() {
           <div className="text-right">{t('ranking.thAction')}</div>
         </div>
           {filtered.map((p, i) => (
-            <RankingRow key={p.slug} p={p} rank={i+1}/>
+            <RankingRow key={p.slug} p={p} rank={i+1} modelId={model}/>
           ))}
         </div>
       </div>
@@ -3119,13 +3467,13 @@ function RankingSection() {
   );
 }
 
-function RankingRow({ p, rank }) {
+function RankingRow({ p, rank, modelId }) {
   const { t } = useLang();
   return (
     <Fragment>
       {/* Desktop layout — grid · whole row links to provider detail via
           stretched-link; the Run cell lifts to z-[2] to remain clickable. */}
-      <div className="hidden lg:grid rank-row row-hover grid-cols-[64px_2fr_1.6fr_1.4fr_1.2fr_1.2fr_160px] px-8 py-5 items-center group fade-up relative">
+      <div className="hidden lg:grid rank-row row-hover grid-cols-[64px_2fr_1.4fr_1.6fr_1.2fr_1.2fr_160px] px-8 py-5 items-center group fade-up relative">
         <a href={`#/providers/${p.slug}`} aria-label={p.name} className="absolute inset-0 z-[1]"/>
         <div>
           <div className="serif-it text-3xl text-ash group-hover:text-brand transition-colors">{rank}</div>
@@ -3142,13 +3490,13 @@ function RankingRow({ p, rank }) {
           </div>
         </div>
         <div>
-          <CostCell p={p} />
-        </div>
-        <div>
           <div className="flex items-baseline gap-2">
             <span className="num text-[14px] text-bone">{p.overall}</span>
             <TierChip tier={p.tier}/>
           </div>
+        </div>
+        <div>
+          <CostCell p={p} modelId={modelId}/>
         </div>
         <div className="num text-[14px]">
           <span className={p.success >= 0.99 ? 'text-brand' : p.success >= 0.97 ? 'text-bone' : 'text-amber'}>
@@ -3183,13 +3531,6 @@ function RankingRow({ p, rank }) {
         <div className="mt-4 grid grid-cols-2 gap-px bg-ink-600 border border-ink-600">
           <div className="bg-ink p-3">
             <div className="micro text-smoke mb-1.5 flex items-center gap-1.5">
-              <span>{t('ranking.thCost')}</span>
-              <Tooltip content={t('ranking.thCostHint')}><I.info className="w-3 h-3"/></Tooltip>
-            </div>
-            <CostCell p={p}/>
-          </div>
-          <div className="bg-ink p-3">
-            <div className="micro text-smoke mb-1.5 flex items-center gap-1.5">
               <span>{t('ranking.thScore')}</span>
               <Tooltip content={t('ranking.thScoreHint')}><I.info className="w-3 h-3"/></Tooltip>
             </div>
@@ -3197,6 +3538,13 @@ function RankingRow({ p, rank }) {
               <span className="num text-[14px] text-bone">{p.overall}</span>
               <TierChip tier={p.tier}/>
             </div>
+          </div>
+          <div className="bg-ink p-3">
+            <div className="micro text-smoke mb-1.5 flex items-center gap-1.5">
+              <span>{t('ranking.thCost')}</span>
+              <Tooltip content={t('ranking.thCostHint')}><I.info className="w-3 h-3"/></Tooltip>
+            </div>
+            <CostCell p={p} modelId={modelId}/>
           </div>
           <div className="bg-ink p-3">
             <div className="micro text-smoke mb-1.5 flex items-center gap-1.5">
@@ -4490,10 +4838,616 @@ function RecommendedAction({ run }) {
    PROVIDER DETAIL
    =========================================================== */
 
-function ProviderPage({ slug }) {
+// Small amber chip indicating a column is preview / mock data
+function PreviewChip() {
   const { t } = useLang();
+  return (
+    <span className="inline-flex items-center gap-1 text-[9px] tracking-wider uppercase border border-amber/50 text-amber px-1.5 py-0.5">
+      <I.dot className="w-1 h-1"/>{t('provider.previewChip')}
+    </span>
+  );
+}
+
+// Chip showing which GatewayBench sub-dimension an incident maps to.
+// L1.* / L2.* / L3.* map to brand (blue) / sky (cyan) / amber (orange).
+function DimChip({ dim }) {
+  if (!dim) return null;
+  const familyDigit = dim[1]; // 'L1.x' → '1'
+  const tone = familyDigit === '1' ? 'border-brand/45 text-brand'
+            : familyDigit === '2' ? 'border-sky/45 text-sky'
+            :                       'border-amber/45 text-amber';
+  return (
+    <span className={cx('inline-flex items-center text-[10px] tracking-wider uppercase border px-1.5 py-0.5 num', tone)}>
+      {dim}
+    </span>
+  );
+}
+
+// Chip indicating overall billing-transparency health based on avg observed
+// drift vs listed price. clean / minor / concern map to brand / amber / coral.
+function BillingTrustChip({ status }) {
+  const { t } = useLang();
+  const map = {
+    clean:   { tone: 'border-brand/40 text-brand',   label: t('provider.billingClean') },
+    minor:   { tone: 'border-amber/40 text-amber',   label: t('provider.billingMinor') },
+    concern: { tone: 'border-coral/40 text-coral',   label: t('provider.billingConcern') },
+  };
+  const c = map[status] || map.clean;
+  return (
+    <span className={cx('inline-flex items-center gap-1 text-[10px] tracking-wider uppercase border px-1.5 py-0.5', c.tone)}>
+      <I.dot className="w-1.5 h-1.5"/>{c.label}
+    </span>
+  );
+}
+
+// Compute structured pricing entries for a provider: each row is a (model,
+// official, listed, observed) tuple plus derived markup / drift percentages.
+function providerCostEntries(p) {
+  return MODELS
+    .filter(m => p.modelPricing[m.id])
+    .map(m => {
+      const mp = p.modelPricing[m.id];
+      const refIn  = m.officialIn;
+      const refOut = m.officialOut;
+      const listedBlended   = (mp.listedIn   + mp.listedOut)   / 2;
+      const observedBlended = (mp.observedIn + mp.observedOut) / 2;
+      const refBlended      = (refIn         + refOut)         / 2;
+      const markupVsOfficial = refBlended > 0 ? ((listedBlended - refBlended) / refBlended) * 100 : 0;
+      const driftVsListed    = listedBlended > 0 ? ((observedBlended - listedBlended) / listedBlended) * 100 : 0;
+      return { m, mp, refIn, refOut, listedBlended, observedBlended, refBlended, markupVsOfficial, driftVsListed };
+    });
+}
+
+// Per-call cost estimator with model dropdown + at-scale linear projection.
+// Reads model selection from local state so user can switch within the card.
+function PerCallEstimator({ entries }) {
+  const { t } = useLang();
+  const [selectedId, setSelectedId] = useState(entries[0]?.m.id);
+  const sel = entries.find(e => e.m.id === selectedId) || entries[0];
+  if (!sel) return null;
+
+  // Typical chat completion: 250 in + 750 out tokens (1:3 ratio)
+  const inTok = 250, outTok = 750;
+  const observedReq = (inTok * sel.mp.observedIn + outTok * sel.mp.observedOut) / 1e6;
+  const refReq      = (inTok * sel.refIn         + outTok * sel.refOut)         / 1e6;
+  const perCallDelta = observedReq - refReq;
+  const cheaper = perCallDelta < 0;
+  const matched = Math.abs(perCallDelta) < 1e-7;
+  const tone = matched ? 'text-smoke' : cheaper ? 'text-brand' : 'text-coral';
+
+  const tiers = [100, 1000, 10000, 100000];
+
+  return (
+    <div className="card p-6 space-y-6">
+      {/* Header: cost analyzer title + typical chat subtitle + model picker */}
+      <div className="flex items-baseline justify-between gap-3 flex-wrap pb-4 border-b border-ink-600">
+        <div>
+          <h4 className="serif text-xl tracking-editorial">{t('provider.costAnalyzerTitle')}</h4>
+          <div className="micro text-smoke mt-1.5">{t('provider.perTypicalChat', { inTok, outTok })}</div>
+        </div>
+        <Dropdown
+          label={t('provider.selectModel')}
+          value={sel.m.display}
+          options={entries.map(e => ({ v: e.m.id, l: e.m.display }))}
+          onChange={setSelectedId}
+        />
+      </div>
+
+      {/* Two-cell comparison: official (reference) → observed (highlighted) */}
+      <div className="grid grid-cols-2 gap-px bg-ink-600 border border-ink-600">
+        <div className="bg-ink px-4 py-4">
+          <div className="micro text-smoke mb-1.5">{t('provider.officialPrice')}</div>
+          <div className="num text-[20px] text-smoke tracking-tight">{fmtUSD(refReq, 4)}</div>
+        </div>
+        <div
+          className="px-4 py-4 border-l-2 border-amber/50"
+          style={{ background: 'rgb(var(--amber) / 0.06)' }}
+        >
+          <div className="micro text-amber mb-1.5 flex items-center gap-1.5">
+            {t('provider.observedShort')} <PreviewChip/>
+          </div>
+          <div className="num text-[20px] text-bone font-medium tracking-tight">{fmtUSD(observedReq, 4)}</div>
+        </div>
+      </div>
+
+      {/* At scale */}
+      {!matched && (
+        <div className="pt-4 border-t border-ink-600">
+          <div className="micro text-smoke mb-3">{cheaper ? t('provider.atScaleSavings') : t('provider.atScalePremium')}</div>
+          <div>
+            {tiers.map(n => {
+              const daily = Math.abs(perCallDelta) * n;
+              return (
+                <div key={n} className="flex items-baseline justify-between text-[12px] py-2 border-b border-ink-600 last:border-0">
+                  <span className="num text-ash">{t('provider.callsPerDay', { n: n.toLocaleString() })}</span>
+                  <span className={cx('num', tone)}>
+                    {cheaper ? '−' : '+'}{fmtUSD(daily)}{t('provider.perDay')}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-3 pt-3 border-t border-ink-600 text-[11px] text-smoke leading-relaxed">
+            {(cheaper
+              ? t('provider.annualizedSaved', { amt: '__AMT__' })
+              : t('provider.annualizedExtra', { amt: '__AMT__' })
+            ).split('__AMT__').map((part, i, arr) => (
+              <Fragment key={i}>
+                {part}
+                {i < arr.length - 1 && (
+                  <span className={cx('num', tone)}>
+                    {cheaper ? '−' : '+'}{fmtMoney(Math.abs(perCallDelta) * 10000 * 365, 0)}
+                  </span>
+                )}
+              </Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Top-of-detail-page metric strip · mirrors the ranking row columns
+// (cost / trust / latency / success) plus TTFT as a 5th tile.
+function TopMetrics({ p }) {
+  const { t } = useLang();
+  const defaultModel = MODELS.find(m => m.id === p.defaultModelId);
+  // TTFT p95 derived deterministically from p.ttft (same formula as PerformanceSection)
+  const ttftP95Ms = ((p.ttft * (1.85 + (strHash(p.slug + 'p95ttft') % 25) / 100)) * 1000) | 0;
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-ink-600 mb-12">
+      <Metric
+        label={t('provider.m1MTokInOut')}
+        value={`${fmtUSD(p.costIn)} / ${fmtUSD(p.costOut)}`}
+        sub={defaultModel ? defaultModel.display : ''}
+        tone={p.costDelta < 0 ? 'brand' : p.costDelta > 10 ? 'coral' : 'bone'}
+      />
+      <TrustHistoryCard p={p}/>
+      <Metric label={t('provider.mTtft')} value={`${(p.ttft * 1000) | 0}ms`} sub={t('provider.mTtftSub', { ms: ttftP95Ms })}/>
+      <Metric label={t('provider.mSuccess')} value={fmtPct(p.success, 1)} sub={t('provider.mSamples', { n: p.samples.toLocaleString() })}/>
+    </div>
+  );
+}
+
+// Compact dim chip for sidebar event count (e.g. "L2×1")
+function DimChipMini({ fam, count }) {
+  const familyDigit = fam[1];
+  const tone = familyDigit === '1' ? 'text-brand'
+            : familyDigit === '2' ? 'text-sky'
+            :                       'text-amber';
+  return (
+    <span className={cx('inline-flex items-center text-[10px] num tracking-wider uppercase', tone)}>
+      {fam}×{count}
+    </span>
+  );
+}
+
+// Sticky scorecard sidebar — page-level reading anchor with differentiated
+// styling (card-2 + brand gradient hairline + collapsible tier breakdowns).
+// On lg+ it sticks to the top; on mobile it's just an inline block.
+function ScoreSidebar({ p }) {
+  const { t } = useLang();
+  const dimCounts = (p.incidents || []).reduce((acc, inc) => {
+    const fam = (inc.dim || '').slice(0, 2);
+    if (fam) acc[fam] = (acc[fam] || 0) + 1;
+    return acc;
+  }, {});
+  const totalEvents = Object.values(dimCounts).reduce((s, n) => s + n, 0);
+
+  const tiers = [
+    { key: 'L1', label: t('provider.l1Label'), score: p.L1, w: 40, text: 'text-brand', bar: 'bg-brand',
+      subs: [
+        { id: '1.1', name: t('provider.sub11'), value: p.scores.L1.modelAuth,    w: 50 },
+        { id: '1.2', name: t('provider.sub12'), value: p.scores.L1.billingTrans, w: 30 },
+        { id: '1.3', name: t('provider.sub13'), value: p.scores.L1.cacheFraud,   w: 20 },
+      ],
+    },
+    { key: 'L3', label: t('provider.l3Label'), score: p.L3, w: 40, text: 'text-amber', bar: 'bg-amber',
+      subs: [
+        { id: '3.1', name: t('provider.sub31'), value: p.scores.L3.listPricing,        w: 35 },
+        { id: '3.2', name: t('provider.sub32'), value: p.scores.L3.relativeToOfficial, w: 40 },
+        { id: '3.3', name: t('provider.sub33'), value: p.scores.L3.hiddenCost,         w: 25 },
+      ],
+    },
+    { key: 'L2', label: t('provider.l2Label'), score: p.L2, w: 20, text: 'text-sky', bar: 'bg-sky',
+      subs: [
+        { id: '2.1', name: t('provider.sub21'), value: p.scores.L2.latency,     w: 50 },
+        { id: '2.2', name: t('provider.sub22'), value: p.scores.L2.throughput,  w: 30 },
+        { id: '2.3', name: t('provider.sub23'), value: p.scores.L2.longContext, w: 20 },
+      ],
+    },
+  ];
+
+  return (
+    <aside className="lg:sticky lg:top-20 self-start">
+      <div className="card-2 ring-1 ring-brand/25 relative overflow-hidden">
+        {/* Top brand gradient line */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand to-transparent"/>
+        <div className="p-6">
+          {/* Headline score · single section: label, big number, / 100 and tier
+              chip all on one row, progress bar directly below */}
+          <div className="micro text-smoke mb-3">{t('provider.sidebarScoreLabel')}</div>
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <span className="serif text-[52px] leading-none tracking-editorial text-bone num">{p.overall}</span>
+            <span className="micro text-smoke num">/ 100</span>
+            <TierChip tier={p.tier} size="lg"/>
+          </div>
+          <div className="mt-4 h-1.5 bg-ink-700 overflow-hidden relative">
+            <div
+              className="absolute inset-y-0 left-0 bg-brand transition-all"
+              style={{ width: `${p.overall}%` }}
+              title={`${p.overall} / 100`}
+            />
+          </div>
+
+          {/* Tier rows · collapsible, all closed by default */}
+          <div className="mt-6 pt-5 border-t border-ink-600 space-y-px bg-ink-600">
+            {tiers.map(g => (
+              <details key={g.key} className="bg-ink group">
+                <summary className="py-2.5 px-3 flex items-center gap-2 cursor-pointer hover:bg-ink-700 transition-colors">
+                  <span className="text-smoke text-[9px] num group-open:rotate-90 transition-transform inline-block w-2 shrink-0">▶</span>
+                  <span className="text-[12px] text-bone truncate flex-1 min-w-0">
+                    <span className={g.text}>{g.key}</span> · {g.label}
+                  </span>
+                  <span className={cx('num text-[13px] w-8 text-right shrink-0', g.text)}>{g.score}</span>
+                  <span className="micro text-smoke w-8 text-right shrink-0">{g.w}%</span>
+                </summary>
+                <div className="border-t border-ink-600 divide-y divide-ink-600">
+                  {g.subs.map(s => (
+                    <div key={s.id} className="px-3 py-2 flex items-center gap-2 text-[11px]">
+                      <span className="num text-[9px] text-smoke shrink-0 w-5">{s.id}</span>
+                      <span className="text-ash truncate flex-1 min-w-0">{s.name}</span>
+                      <span className="num text-bone w-7 text-right">{s.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+
+          {/* Event count */}
+          <div className="mt-5 pt-4 border-t border-ink-600">
+            <div className="flex items-center justify-between gap-2 text-[11px]">
+              <span className="micro text-smoke">{t('provider.sidebarRecent7d')}</span>
+              {totalEvents === 0 ? (
+                <span className="text-smoke">{t('provider.sidebarNoEvents')}</span>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="num text-bone">{t('provider.sidebarEventsCount', { n: totalEvents })}</span>
+                  <span className="flex items-center gap-1.5">
+                    {dimCounts.L1 > 0 && <DimChipMini fam="L1" count={dimCounts.L1}/>}
+                    {dimCounts.L2 > 0 && <DimChipMini fam="L2" count={dimCounts.L2}/>}
+                    {dimCounts.L3 > 0 && <DimChipMini fam="L3" count={dimCounts.L3}/>}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Formula */}
+          <div className="mt-4 pt-4 border-t border-ink-600">
+            <div className="micro text-smoke mb-1.5">{t('provider.sidebarFormula')}</div>
+            <div className="num text-[11px] text-bone leading-relaxed">0.4·L1 + 0.4·L3 + 0.2·L2</div>
+            <a href="#/docs" className="mt-3 micro text-brand hover:underline inline-flex items-center gap-1">
+              {t('provider.methodology')} <I.arrow className="w-3 h-3"/>
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// PerfMetric — single tile in the performance section (5-up grid)
+function PerfMetric({ label, value, tone, hint }) {
+  return (
+    <div className="bg-ink p-4">
+      <div className="micro text-smoke mb-2 flex items-center gap-1.5">
+        <span>{label}</span>
+        {hint && <Tooltip content={hint}><I.info className="w-3 h-3"/></Tooltip>}
+      </div>
+      <div className={cx('num text-[20px] tracking-tight', tone)}>{value}</div>
+    </div>
+  );
+}
+
+// PlaceholderCard — for throughput / long-context that need T2 measurement
+function PlaceholderCard({ title, note }) {
+  return (
+    <div className="card p-5 relative">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="text-[13px] text-bone">{title}</div>
+        <PreviewChip/>
+      </div>
+      <div className="micro text-smoke leading-relaxed">{note}</div>
+      <div className="mt-4 h-1 bg-ink-700 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-ink-500 to-transparent opacity-50"/>
+      </div>
+    </div>
+  );
+}
+
+// PerformanceSection — §02 (L2) · NEW
+// Surfaces TTFT / p50 / p95 / p99 / success + 7d latency trend + regional
+// breakdown (mock) + throughput / long-context placeholders (T2 roadmap).
+function PerformanceSection({ p }) {
+  const { t } = useLang();
+  // All latency metrics on this page are percentiles of TTFT (time-to-first-token).
+  // p50 = p.ttft directly; p95 / p99 derived from p50 with deterministic per-slug jitter.
+  const ttftP50 = p.ttft;
+  const ttftP95 = +(ttftP50 * (1.85 + (strHash(p.slug + 'p95ttft') % 25) / 100)).toFixed(3);
+  const ttftP99 = +(ttftP50 * (2.55 + (strHash(p.slug + 'p99ttft') % 30) / 100)).toFixed(3);
+  const fmtMs = (s) => `${(s * 1000) | 0}ms`;
+
+  // Regional TTFT mock — provider's home region keeps base TTFT,
+  // others scale up by a multiplier with deterministic jitter (network distance)
+  const regions = useMemo(() => {
+    const base = ttftP50;
+    const seed = (k) => strHash(p.slug + k) % 100;
+    const reg = (p.region || '').toLowerCase();
+    const homeBase = (homeKey) => reg.includes(homeKey) ? 1 : 1.4 + seed(homeKey) / 250;
+    const globalish = reg.includes('global') || reg.includes('self') || reg.includes('asia');
+    return [
+      { name: 'US',   ttft: +(base * homeBase('us')).toFixed(3) },
+      { name: 'EU',   ttft: +(base * homeBase('eu')).toFixed(3) },
+      { name: 'Asia', ttft: +(base * (globalish ? 1.1 : 1.7 + seed('asia') / 250)).toFixed(3) },
+    ];
+  }, [p.slug, ttftP50, p.region]);
+  const maxRegional = Math.max(...regions.map(r => r.ttft));
+
+  // 7d TTFT sparkline — derive from the last 7 of p.spark, anchored to p.ttft.
+  // We slice to exactly 7 so the label "7-day trend" matches the visible points.
+  const ttftSpark = useMemo(() => {
+    if (!p.spark || !p.spark.length) return [];
+    const recent = p.spark.slice(-7);
+    return recent.map(v => +(ttftP50 * (0.88 + (v / 10) * 0.20)).toFixed(3));
+  }, [p.slug, p.spark, ttftP50]);
+
+  const tone = (val, ok, warn) => val <= ok ? 'text-brand' : val <= warn ? 'text-amber' : 'text-coral';
+  const successTone = p.success >= 0.99 ? 'text-brand' : p.success >= 0.97 ? 'text-bone' : 'text-amber';
+
+  return (
+    <section>
+      <div className="micro text-smoke mb-3">{t('provider.tagPerformance')}</div>
+      <h3 className="serif text-3xl tracking-editorial">{t('provider.headPerformance')}</h3>
+      <p className="mt-2 text-[13px] text-ash leading-relaxed">
+        {t('provider.perfSummary', { samples: p.samples.toLocaleString() })}
+      </p>
+
+      {/* 4 TTFT percentile tiles (p50 / p95 / p99) + success rate */}
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-px bg-ink-600 border border-ink-600">
+        <PerfMetric label={t('provider.perfP50')}     hint={t('provider.perfP50Hint')}     value={fmtMs(ttftP50)}             tone={tone(ttftP50, 0.30, 0.50)}/>
+        <PerfMetric label={t('provider.perfP95')}     hint={t('provider.perfP95Hint')}     value={fmtMs(ttftP95)}             tone={tone(ttftP95, 0.60, 1.00)}/>
+        <PerfMetric label={t('provider.perfP99')}     hint={t('provider.perfP99Hint')}     value={fmtMs(ttftP99)}             tone={tone(ttftP99, 0.80, 1.40)}/>
+        <PerfMetric label={t('provider.perfSuccess')} hint={t('provider.perfSuccessHint')} value={fmtPct(p.success, 1)}       tone={successTone}/>
+      </div>
+
+      {/* 7d TTFT trend · editorial-style smooth chart with header-driven hover */}
+      {ttftSpark.length > 0 && (
+        <div className="mt-6 card p-5">
+          <div className="micro text-smoke mb-4">{t('provider.perfTrend7d')}</div>
+          <TtftTrendChart data={ttftSpark} color="rgb(var(--sky))"/>
+        </div>
+      )}
+
+      {/* Regional TTFT breakdown */}
+      <div className="mt-6 card p-5">
+        <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+          <div className="micro text-smoke">{t('provider.perfRegional')}</div>
+          <PreviewChip/>
+        </div>
+        <div className="space-y-3">
+          {regions.map(r => (
+            <div key={r.name}>
+              <div className="flex items-baseline justify-between mb-1.5 text-[12px]">
+                <span className="text-ash">{r.name}</span>
+                <span className="num text-bone">{(r.ttft * 1000) | 0}ms</span>
+              </div>
+              <div className="h-1.5 bg-ink-700 relative overflow-hidden">
+                <div className="absolute inset-y-0 left-0 bg-sky transition-all" style={{ width: `${(r.ttft / maxRegional) * 100}%` }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Throughput + LongContext placeholders */}
+      <div className="mt-6 grid sm:grid-cols-2 gap-4">
+        <PlaceholderCard title={t('provider.perfThroughput')}  note={t('provider.perfThroughputNote')}/>
+        <PlaceholderCard title={t('provider.perfLongContext')} note={t('provider.perfLongContextNote')}/>
+      </div>
+    </section>
+  );
+}
+
+// IncidentsSection — bottom-of-page, full-width detail list
+function IncidentsSection({ p }) {
+  const { t } = useLang();
+  return (
+    <section className="mt-16">
+      <div className="micro text-smoke mb-3">{t('provider.tagIncidents')}</div>
+      <div className="card divide-y divide-ink-600">
+        {p.incidents.length === 0 ? (
+          <div className="px-6 py-8 text-ash text-[13px]">{t('provider.noIncidents')}</div>
+        ) : p.incidents.map((inc, i) => {
+          const affectedNames = (inc.affectedModels || [])
+            .map(mid => MODELS.find(m => m.id === mid)?.display)
+            .filter(Boolean);
+          return (
+            <div key={i} className="grid grid-cols-[100px_1fr_auto_64px] px-6 py-4 items-start gap-4">
+              <div className="num text-[12px] text-smoke pt-0.5">{inc.time}</div>
+              <div className="min-w-0">
+                <div className="text-[13px] text-bone leading-snug">{inc.issue}</div>
+                {(inc.duration || affectedNames.length > 0) && (
+                  <div className="micro text-smoke mt-1 flex items-center gap-2 flex-wrap">
+                    {inc.duration && <span>{inc.duration}</span>}
+                    {inc.duration && affectedNames.length > 0 && <span className="text-ink-500">·</span>}
+                    {affectedNames.length > 0 && (
+                      <span className="normal-case tracking-normal">{affectedNames.join(' · ')}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="pt-0.5"><DimChip dim={inc.dim}/></div>
+              <div className={cx('micro flex items-center gap-1.5 justify-end pt-1', sevColor(inc.sev))}>
+                <I.dot className="w-2 h-2"/>
+                {t('provider.sev' + (inc.sev === 'high' ? 'High' : inc.sev === 'medium' ? 'Med' : 'Low'))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// CostSection — §01 (L3) · existing logic extracted into a component
+function CostSection({ p }) {
+  const { t } = useLang();
+  const entries = providerCostEntries(p);
+  if (entries.length === 0) {
+    return (
+      <section>
+        <div className="micro text-smoke mb-3">{t('provider.tagCost')}</div>
+        <h3 className="serif text-3xl tracking-editorial">{t('provider.headObservedVsOfficial')}</h3>
+        <p className="mt-3 text-ash text-[13px]">{t('provider.noModelPricing')}</p>
+      </section>
+    );
+  }
+  const avgMarkup = entries.reduce((s, e) => s + e.markupVsOfficial, 0) / entries.length;
+  const avgDrift  = entries.reduce((s, e) => s + e.driftVsListed,    0) / entries.length;
+  const billingStatus = Math.abs(avgDrift) < 1 ? 'clean' : Math.abs(avgDrift) < 3 ? 'minor' : 'concern';
+
+  return (
+    <section>
+      <div className="micro text-smoke mb-3">{t('provider.tagCost')}</div>
+      <h3 className="serif text-3xl tracking-editorial">{t('provider.headObservedVsOfficial')}</h3>
+      <p className="mt-2 text-[13px] text-ash leading-relaxed flex items-center gap-2 flex-wrap">
+        <span>
+          {t('provider.costSummaryPre', { name: p.name, n: entries.length })}
+          {' '}
+          <span className="num text-bone">{avgMarkup >= 0 ? '+' : '−'}{Math.abs(avgMarkup).toFixed(1)}%</span>
+          {t('provider.costSummaryMid')}
+          {' '}
+          <span className={cx('num', billingStatus === 'concern' ? 'text-coral' : billingStatus === 'minor' ? 'text-amber' : 'text-bone')}>
+            {avgDrift >= 0 ? '+' : '−'}{Math.abs(avgDrift).toFixed(1)}%
+          </span>
+          {t('provider.costSummaryPost')}
+        </span>
+        <BillingTrustChip status={billingStatus}/>
+      </p>
+
+      {/* Per-model pricing table */}
+      {/* Visual hierarchy: official = small/muted reference, listed = subtle bone,
+          observed = HIGHLIGHTED (amber tint + left accent + larger bone) */}
+      <div className="mt-6 card overflow-hidden">
+        {/* Desktop grid table */}
+        <div className="hidden md:grid grid-cols-[1.4fr_1fr_1fr_1.3fr] gap-px bg-ink-600 micro text-smoke">
+          <div className="bg-ink-800/40 px-4 py-3">{t('provider.colModel')}</div>
+          <div className="bg-ink-800/40 px-4 py-3">{t('provider.colOfficial')}</div>
+          <div className="bg-ink-800/40 px-4 py-3">{t('provider.colListed')}</div>
+          <div
+            className="px-4 py-3 border-l-2 border-amber/50 flex items-start justify-between gap-2"
+            style={{ background: 'rgb(var(--amber) / 0.10)' }}
+          >
+            <div>
+              <div className="text-bone normal-case tracking-normal text-[12px] font-medium flex items-center gap-1.5">
+                {t('provider.colObserved')}<PreviewChip/>
+              </div>
+              <div className="micro text-amber mt-0.5 normal-case tracking-wider">
+                {t('provider.colObservedNote')}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="hidden md:grid grid-cols-[1.4fr_1fr_1fr_1.3fr] gap-px bg-ink-600 text-[12.5px]">
+          {entries.map(({ m, mp, refIn, refOut }) => (
+            <Fragment key={m.id}>
+              <div className="bg-ink px-4 py-3">
+                <div className="text-bone">{m.display}</div>
+                <div className="micro text-smoke mt-0.5">{m.owner}</div>
+              </div>
+              <div className="bg-ink px-4 py-3 num text-smoke">{fmtUSD(refIn)} / {fmtUSD(refOut)}</div>
+              <div className="bg-ink px-4 py-3 num text-bone/70">{fmtUSD(mp.listedIn)} / {fmtUSD(mp.listedOut)}</div>
+              <div
+                className="px-4 py-3 num text-bone text-[15px] font-medium tracking-tight border-l-2 border-amber/50"
+                style={{ background: 'rgb(var(--amber) / 0.06)' }}
+              >
+                {fmtUSD(mp.observedIn)} / {fmtUSD(mp.observedOut)}
+              </div>
+            </Fragment>
+          ))}
+        </div>
+
+        {/* Mobile stacked cards */}
+        <div className="md:hidden divide-y divide-ink-600">
+          {entries.map(({ m, mp, refIn, refOut }) => (
+            <div key={m.id} className="p-4">
+              <div className="mb-3">
+                <div className="text-bone text-[14px]">{m.display}</div>
+                <div className="micro text-smoke">{m.owner}</div>
+              </div>
+              {/* Observed = primary, full-width, highlighted */}
+              <div
+                className="px-3 py-2.5 border-l-2 border-amber/50 mb-2"
+                style={{ background: 'rgb(var(--amber) / 0.08)' }}
+              >
+                <div className="micro text-amber mb-1 flex items-center gap-1.5">
+                  <span>{t('provider.colObservedShort')}</span>
+                  <PreviewChip/>
+                </div>
+                <div className="num text-bone text-[15px] font-medium tracking-tight">
+                  {fmtUSD(mp.observedIn)} / {fmtUSD(mp.observedOut)}
+                </div>
+              </div>
+              {/* Official + listed = secondary reference, smaller */}
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <div className="micro text-smoke">{t('provider.colOfficialShort')}</div>
+                  <div className="num text-smoke">{fmtUSD(refIn)} / {fmtUSD(refOut)}</div>
+                </div>
+                <div>
+                  <div className="micro text-smoke">{t('provider.colListedShort')}</div>
+                  <div className="num text-bone/70">{fmtUSD(mp.listedIn)} / {fmtUSD(mp.listedOut)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Table footer */}
+        <div className="px-4 py-3 micro text-smoke flex items-center gap-2 border-t border-ink-600 flex-wrap">
+          <PreviewChip/>
+          <span>{t('provider.observedFootnote', { samples: 210, window: '7d' })}</span>
+        </div>
+      </div>
+
+      {/* Per-call estimator */}
+      <div className="mt-8">
+        <PerCallEstimator entries={entries}/>
+      </div>
+    </section>
+  );
+}
+
+function ProviderPage({ slug }) {
+  const { t, lang } = useLang();
   const p = PROVIDERS.find(x=>x.slug===slug);
   if (!p) return <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center text-smoke">{t('provider.notFound')}</div>;
+  const descText = typeof p.desc === 'string' ? p.desc : (p.desc?.[lang] || p.desc?.en || '');
+
+  const TitleRow = (
+    <div className="flex items-center gap-4 mb-5">
+      <ProviderMark slug={slug} size={64}/>
+      <h1 className="serif text-4xl sm:text-5xl lg:text-6xl tracking-editorial inline-flex items-baseline gap-3 group-hover:text-brand transition-colors">
+        <span>{p.name}</span>
+        {p.website && (
+          <I.external className="w-5 h-5 text-smoke group-hover:text-brand transition-colors -translate-y-[6px]"/>
+        )}
+      </h1>
+    </div>
+  );
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-12">
@@ -4502,317 +5456,43 @@ function ProviderPage({ slug }) {
       </a>
 
       <div className="border-b border-ink-600 pb-10 mb-12 flex items-end justify-between flex-wrap gap-6">
-        <div>
-          <div className="flex items-center gap-4 mb-4">
-            <ProviderMark slug={slug} size={64}/>
-            <div>
-              <div className="micro text-smoke flex items-center gap-2 flex-wrap">
-                <span>{p.type} · {p.region}</span>
-                {p.website && (
-                  <Fragment>
-                    <span>·</span>
-                    <a
-                      href={p.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-bone inline-flex items-center gap-1 transition-colors"
-                    >
-                      <span className="normal-case tracking-normal">{websiteLabel(p.website)}</span>
-                      <I.external className="w-2.5 h-2.5"/>
-                    </a>
-                  </Fragment>
-                )}
-              </div>
-              <h1 className="serif text-4xl sm:text-5xl lg:text-6xl tracking-editorial">{p.name}</h1>
-            </div>
-          </div>
-          <p className="text-ash text-[15px] max-w-2xl leading-relaxed">{p.desc}</p>
+        <div className="max-w-3xl">
+          {p.website ? (
+            <a
+              href={p.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-block"
+              aria-label={`${p.name} · ${websiteLabel(p.website)}`}
+            >
+              {TitleRow}
+            </a>
+          ) : (
+            TitleRow
+          )}
+          <p className="text-ash text-[15px] leading-relaxed">{descText}</p>
         </div>
         <div className="flex flex-col gap-2 items-end">
           <a href={`#/run?provider=${slug}`} className="btn-brand px-5 py-2.5 text-sm font-medium inline-flex items-center gap-2">{t('provider.openInRun')} <I.arrow className="w-4 h-4"/></a>
         </div>
       </div>
 
-      {/* METRICS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink-600 mb-12">
-        <Metric label={t('provider.m1MTokInOut')} value={`${fmtUSD(p.costIn)} / ${fmtUSD(p.costOut)}`} sub="" tone={p.costDelta < 0 ? 'brand' : p.costDelta > 10 ? 'coral' : 'bone'}/>
-        <TrustHistoryCard p={p}/>
-        <Metric label={t('provider.mP50Latency')} value={`${p.latency}s`} sub={t('provider.mP95', { v: p.p95 })}/>
-        <Metric label={t('provider.mSuccess')} value={fmtPct(p.success, 1)} sub={t('provider.mSamples', { n: p.samples.toLocaleString() })}/>
+      {/* TOP METRICS — mirror of the ranking row */}
+      <TopMetrics p={p}/>
+
+      {/* MAIN GRID — left: cost / performance / fingerprint;
+          right: sticky scorecard (inline on mobile) */}
+      <div className="grid lg:grid-cols-3 gap-10 lg:gap-12">
+        <div className="lg:col-span-2 space-y-16">
+          <CostSection p={p}/>
+          <PerformanceSection p={p}/>
+          <FingerprintPanel p={p}/>
+        </div>
+        <ScoreSidebar p={p}/>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-12">
-        {/* COST */}
-        <div className="lg:col-span-2">
-          <div className="micro text-smoke mb-3">{t('provider.tagCost')}</div>
-          <h3 className="serif text-3xl tracking-editorial">{t('provider.headObservedVsOfficial')}</h3>
-          <p className="mt-2 text-[13px] text-ash leading-relaxed">
-            {p.costDelta > 0
-              ? t('provider.observedHigher', { pct: p.costDelta })
-              : t('provider.observedLower', { pct: Math.abs(p.costDelta) })}
-          </p>
-          {(() => {
-            const refIn = p.ref * 0.5;
-            const refOut = p.ref * 1.5;
-
-            // Typical chat completion: 250 in + 750 out tokens (1:3 ratio)
-            const inTok = 250, outTok = 750;
-            const observedReq = (inTok * p.costIn + outTok * p.costOut) / 1e6;
-            const refReq = (inTok * refIn + outTok * refOut) / 1e6;
-            const perCallDelta = observedReq - refReq;
-            const cheaper = perCallDelta < 0;
-            const tiedMatch = Math.abs(p.costDelta) < 1;
-
-            const tone = cheaper ? 'text-brand' : p.costDelta > 10 ? 'text-coral' : p.costDelta > 0 ? 'text-amber' : 'text-smoke';
-            const barClr = cheaper ? 'bg-brand' : p.costDelta > 10 ? 'bg-coral' : p.costDelta > 0 ? 'bg-amber' : 'bg-smoke';
-            const deltaTone = cheaper ? 'text-brand' : 'text-coral';
-
-            const maxBlended = Math.max(p.cost, p.ref);
-            const obsBarPct = (p.cost / maxBlended) * 100;
-            const refBarPct = (p.ref / maxBlended) * 100;
-
-            const tiers = [100, 1000, 10000, 100000];
-
-            return (
-              <div className="mt-6 card p-6 space-y-6">
-
-                {/* §1 · Per 1M tokens */}
-                <div>
-                  <div className="micro text-smoke mb-4">{t('provider.per1M')}</div>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex items-baseline justify-between mb-1.5">
-                        <span className="text-[13px] text-bone">{p.name} · {t('provider.observed')}</span>
-                        <span className={cx('num text-[15px]', tone)}>{fmtUSD(p.cost)}</span>
-                      </div>
-                      <div className="h-2 bg-ink-700 relative overflow-hidden">
-                        <div className={cx('absolute inset-y-0 left-0 transition-all', barClr)} style={{ width: `${obsBarPct}%` }}/>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-baseline justify-between mb-1.5">
-                        <span className="text-[13px] text-smoke">{t('provider.officialReference')}</span>
-                        <span className="num text-[15px] text-smoke">{fmtUSD(p.ref)}</span>
-                      </div>
-                      <div className="h-2 bg-ink-700 relative overflow-hidden">
-                        <div className="absolute inset-y-0 left-0 bg-smoke" style={{ width: `${refBarPct}%` }}/>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-ink-600 grid grid-cols-1 sm:grid-cols-2 gap-3 text-[12px]">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-smoke">{t('provider.input')}</span>
-                      <span className="num"><span className={tone}>{fmtUSD(p.costIn)}</span> <span className="text-smoke">/ {fmtUSD(refIn)} {t('provider.ref')}</span></span>
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-smoke">{t('provider.output')}</span>
-                      <span className="num"><span className={tone}>{fmtUSD(p.costOut)}</span> <span className="text-smoke">/ {fmtUSD(refOut)} {t('provider.ref')}</span></span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* §2 · Per typical chat */}
-                <div className="pt-4 border-t border-ink-600">
-                  <div className="micro text-smoke mb-3">{t('provider.perTypicalChat', { inTok, outTok })}</div>
-                  <div className="grid grid-cols-3 gap-px bg-ink-600 border border-ink-600">
-                    <div className="bg-ink p-3">
-                      <div className="micro text-smoke mb-1">{t('provider.observedShort')}</div>
-                      <div className="num text-[15px] text-bone">{fmtUSD(observedReq, 4)}</div>
-                    </div>
-                    <div className="bg-ink p-3">
-                      <div className="micro text-smoke mb-1">{t('provider.reference')}</div>
-                      <div className="num text-[15px] text-smoke">{fmtUSD(refReq, 4)}</div>
-                    </div>
-                    <div className="bg-ink p-3">
-                      <div className="micro text-smoke mb-1">{tiedMatch ? t('provider.colMatch') : cheaper ? t('provider.colYouSave') : t('provider.colYouPayExtra')}</div>
-                      <div className={cx('num text-[15px]', tiedMatch ? 'text-smoke' : deltaTone)}>
-                        {tiedMatch ? '—' : `${cheaper ? '−' : '+'}${fmtUSD(Math.abs(perCallDelta), 4)}`}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* §3 · At your scale */}
-                {!tiedMatch && (
-                  <div className="pt-4 border-t border-ink-600">
-                    <div className="micro text-smoke mb-3">{cheaper ? t('provider.atScaleSavings') : t('provider.atScalePremium')}</div>
-                    <div>
-                      {tiers.map(n => {
-                        const daily = Math.abs(perCallDelta) * n;
-                        return (
-                          <div key={n} className="flex items-baseline justify-between text-[12px] py-2 border-b border-ink-600 last:border-0">
-                            <span className="num text-ash">{t('provider.callsPerDay', { n: n.toLocaleString() })}</span>
-                            <span className={cx('num', deltaTone)}>
-                              {cheaper ? '−' : '+'}{fmtUSD(daily)}{t('provider.perDay')}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-ink-600 text-[11px] text-smoke leading-relaxed">
-                      {(cheaper
-                        ? t('provider.annualizedSaved', { amt: '__AMT__' })
-                        : t('provider.annualizedExtra', { amt: '__AMT__' })
-                      ).split('__AMT__').map((part, i, arr) => (
-                        <Fragment key={i}>
-                          {part}
-                          {i < arr.length - 1 && (
-                            <span className={cx('num', deltaTone)}>
-                              {cheaper ? '−' : '+'}{fmtMoney(Math.abs(perCallDelta) * 10000 * 365, 0)}
-                            </span>
-                          )}
-                        </Fragment>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* SCORE BREAKDOWN */}
-        <div>
-          <div className="micro text-smoke mb-3">{t('provider.tagScore')}</div>
-          <div className="flex items-baseline justify-between flex-wrap gap-2">
-            <h3 className="serif text-3xl tracking-editorial">{t('provider.headBench')}</h3>
-            <div className="flex items-baseline gap-2">
-              <TierChip tier={p.tier} size="lg"/>
-              <span className="num text-[20px] text-bone">{p.overall}</span>
-              <span className="text-smoke text-[11px] num">/ 100</span>
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-px bg-ink-600 border border-ink-600">
-            {[
-              {
-                key: 'L1', label: t('provider.l1Label'), score: p.L1, w: 40, defaultOpen: true,
-                subs: [
-                  { id: '1.1', name: t('provider.sub11'),  value: p.scores.L1.modelAuth,    w: 50 },
-                  { id: '1.2', name: t('provider.sub12'), value: p.scores.L1.billingTrans, w: 30 },
-                  { id: '1.3', name: t('provider.sub13'), value: p.scores.L1.cacheFraud,   w: 20 },
-                ],
-              },
-              {
-                key: 'L3', label: t('provider.l3Label'), score: p.L3, w: 40,
-                subs: [
-                  { id: '3.1', name: t('provider.sub31'), value: p.scores.L3.listPricing,        w: 35 },
-                  { id: '3.2', name: t('provider.sub32'), value: p.scores.L3.relativeToOfficial, w: 40 },
-                  { id: '3.3', name: t('provider.sub33'), value: p.scores.L3.hiddenCost,         w: 25 },
-                ],
-              },
-              {
-                key: 'L2', label: t('provider.l2Label'), score: p.L2, w: 20,
-                subs: [
-                  { id: '2.1', name: t('provider.sub21'), value: p.scores.L2.latency,     w: 50 },
-                  { id: '2.2', name: t('provider.sub22'), value: p.scores.L2.throughput,  w: 30 },
-                  { id: '2.3', name: t('provider.sub23'), value: p.scores.L2.longContext, w: 20 },
-                ],
-              },
-            ].map(g => {
-              const tone = g.score >= 90 ? 'bg-brand' : g.score >= 75 ? 'bg-amber' : 'bg-coral';
-              return (
-                <details key={g.key} open={g.defaultOpen} className="bg-ink group">
-                  <summary className="px-4 py-3 flex items-center gap-3 hover:bg-ink-700 transition-colors">
-                    <span className="text-smoke text-[10px] num group-open:rotate-90 transition-transform inline-block w-2">▶</span>
-                    <span className="text-[13px] text-bone shrink-0 w-32">
-                      <span className="text-smoke">{g.key}</span> {g.label}
-                    </span>
-                    <div className="flex-1 h-1 bg-ink-500 relative overflow-hidden mx-2 max-w-[200px]">
-                      <div className={cx('absolute inset-y-0 left-0', tone)} style={{ width: `${g.score}%` }}></div>
-                    </div>
-                    <span className="num text-[14px] text-bone w-8 text-right">{g.score}</span>
-                    <span className="micro text-smoke w-12 text-right">{g.w}%</span>
-                  </summary>
-                  <div className="border-t border-ink-600 divide-y divide-ink-600">
-                    {g.subs.map(s => {
-                      const sTone = s.value >= 90 ? 'bg-brand/70' : s.value >= 75 ? 'bg-amber/70' : 'bg-coral/70';
-                      return (
-                        <div key={s.id} className="px-4 py-2.5 flex items-center gap-3">
-                          <span className="num text-[10px] text-smoke shrink-0 w-6">{s.id}</span>
-                          <span className="text-[12px] text-ash shrink-0 w-40">{s.name}</span>
-                          <div className="flex-1 h-px bg-ink-500 relative overflow-hidden mx-2 max-w-[160px]">
-                            <div className={cx('absolute inset-y-0 left-0', sTone)} style={{ width: `${s.value}%` }}></div>
-                          </div>
-                          <span className="num text-[12px] text-bone w-8 text-right">{s.value}</span>
-                          <span className="micro text-smoke w-12 text-right">{s.w}%</span>
-                        </div>
-                      );
-                    })}
-                    <div className="px-4 py-2 text-[11px] text-smoke leading-relaxed">{subNote(p, g.key)}</div>
-                  </div>
-                </details>
-              );
-            })}
-          </div>
-
-          <div className="mt-3 text-[11px] text-smoke leading-relaxed">
-            {t('provider.overallFormula')}{' '}
-            <span className="num text-bone">{p.overall}</span>{' '}
-            → <TierChip tier={p.tier}/>{' '}
-            <a href="#/docs" className="ulink ml-1">{t('provider.methodology')}</a>
-          </div>
-
-          <TrustVelocity p={p}/>
-        </div>
-      </div>
-
-      {/* INCIDENTS */}
-      <div className="mt-16">
-        <div className="micro text-smoke mb-3">{t('provider.tagIncidents')}</div>
-        <div className="card divide-y divide-ink-600">
-          {p.incidents.length === 0 ? (
-            <div className="px-6 py-8 text-ash text-[13px]">{t('provider.noIncidents')}</div>
-          ) : p.incidents.map((inc, i) => (
-            <div key={i} className="grid grid-cols-[140px_1fr_140px] px-6 py-4 items-center">
-              <div className="num text-[12px] text-smoke">{inc.time}</div>
-              <div className="text-[13px] text-bone">{inc.issue}</div>
-              <div className={cx('micro flex items-center gap-2 justify-end', sevColor(inc.sev))}>
-                <I.dot className="w-2 h-2"/>
-                {t('provider.sev' + (inc.sev === 'high' ? 'High' : inc.sev === 'medium' ? 'Med' : 'Low'))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* MODEL FINGERPRINT */}
-      <FingerprintPanel p={p}/>
-
-      {/* SUPPORTED MODELS */}
-      <div className="mt-16">
-        <div className="micro text-smoke mb-3">{t('provider.tagSupportedModels')}</div>
-        <div className="card overflow-x-auto">
-          <div className="min-w-[640px]">
-            <div className="grid grid-cols-[1.6fr_repeat(4,_1fr)_120px] px-6 py-3 micro text-smoke border-b border-ink-600 bg-ink-800/30">
-              <div>{t('provider.smModel')}</div>
-              <div className="text-center">{t('provider.smStreaming')}</div>
-              <div className="text-center">{t('provider.smToolCalling')}</div>
-              <div className="text-center">{t('provider.smJsonSchema')}</div>
-              <div className="text-center">{t('provider.smZdr')}</div>
-              <div className="text-right">{t('provider.smPriceInOut')}</div>
-            </div>
-            {MODELS.map((m) => {
-              const Cap = ({ on }) => on
-                ? <I.check className="w-3.5 h-3.5 text-brand inline"/>
-                : <span className="text-smoke">—</span>;
-              return (
-              <div key={m.id} className="grid grid-cols-[1.6fr_repeat(4,_1fr)_120px] px-6 py-3 items-center border-b border-ink-600 last:border-0">
-                <div>
-                  <div className="text-bone text-[13px]">{m.display}</div>
-                  <div className="micro text-smoke">{m.owner}</div>
-                </div>
-                <div className="text-center"><Cap on={m.caps.stream}/></div>
-                <div className="text-center"><Cap on={m.caps.tool}/></div>
-                <div className="text-center"><Cap on={m.caps.json}/></div>
-                <div className="text-center"><Cap on={m.caps.zdr}/></div>
-                <div className="text-right num text-[12px]">{fmtUSD(m.officialIn)} <span className="text-smoke">/</span> {fmtUSD(m.officialOut)}</div>
-              </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      {/* INCIDENTS — full-width bottom section */}
+      <IncidentsSection p={p}/>
     </div>
   );
 }

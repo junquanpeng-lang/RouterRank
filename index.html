@@ -508,8 +508,8 @@ const PROVIDERS = [
         sev: 'low', dim: 'L1.2', duration: 'resolved', affectedModels: ['openai/gpt-5.5'] },
     ],
     desc: {
-      en: 'Production-grade AI gateway. Built for teams that need observability, guardrails and routing controls layered on top of multi-model traffic. Listed prices sit slightly above upstream official, with mild observed drift.',
-      zh: '面向生产环境的 AI Gateway。给需要在多模型流量之上叠加可观测、护栏与路由控制的团队使用。标价略高于上游官方价，观测漂移较小。',
+      en: 'Production AI gateway. Unified API to 1,600+ LLMs with observability, guardrails, prompt management, PII redaction and intelligent caching — built for Fortune 500 and AI-native teams that need governance and cost control layered on top of multi-model traffic. "Integrate in 3 lines of code."',
+      zh: '面向生产环境的 AI Gateway，定位于 Fortune 500 与 AI-native 团队。统一 API 接入 1,600+ 个 LLM，附带可观测、护栏、提示词管理、PII 脱敏与智能缓存 —— 给需要在多模型流量之上叠加治理与成本控制的企业团队。官方口号是「3 行代码即可接入」。',
     },
   },
   {
@@ -542,12 +542,12 @@ const PROVIDERS = [
         sev: 'low', dim: 'L2.3', duration: 'persistent', affectedModels: ['anthropic/claude-4.6-sonnet'] },
     ],
     desc: {
-      en: 'Aggregator router covering 100+ models across the major upstream providers. Convenient single-API access trades off a ~10–20% gateway fee, and recent probes flagged suspected silent fallbacks to cheaper variants.',
-      zh: '覆盖 100+ 模型的聚合型路由中转，串联主流上游厂商。便捷的单 API 接入背后是 10–20% 的网关溢价，近期探测疑似存在静默回退到便宜模型的现象。',
+      en: 'Unified API to 400+ models across 60+ providers (Anthropic, OpenAI, Google, Meta and more). One credit pool, automatic failover routing for higher uptime, and custom data policies controlling where prompts land. Currently serves 8M+ developers processing ~80T tokens/month.',
+      zh: '覆盖 60+ 上游厂商、400+ 模型的统一 API（Anthropic、OpenAI、Google、Meta 等）。单一信用余额、跨 provider 自动故障转移以提高可用性、数据流向可配置。当前服务 800 万+ 开发者，月吞吐约 80 万亿 token。',
     },
   },
   {
-    slug: 'bai', name: 'B.ai', type: 'router', domain: 'b.ai', website: 'https://b.ai',
+    slug: 'aimlapi', name: 'AIMLAPI', type: 'router', domain: 'aimlapi.com', website: 'https://aimlapi.com',
     region: 'Global',
     latency: 1.0, p95: 2.5, ttft: 0.28,
     success: 0.961, samples: 1834, overall: 79,
@@ -575,8 +575,8 @@ const PROVIDERS = [
         sev: 'medium', dim: 'L1.2', duration: 'persistent' },
     ],
     desc: {
-      en: 'Cost-optimized aggregator with Asia-Pacific coverage. Listed prices undercut upstream official, but observed billing runs about 8% higher than listed — a transparency gap currently under monitoring.',
-      zh: '面向亚太市场的低价聚合中转。标价低于上游官方价，但观测计费比标价约高 8% —— 这一透明度差距目前处于监测状态。',
+      en: 'Unified gateway covering 400+ models spanning chat, image, video, audio, voice and code. Pay-as-you-go credit system starting at $20 prepay, an AI Playground sandbox for comparing models side by side, and a single endpoint that lets you swap models without touching auth. Targets indie developers and startups.',
+      zh: '覆盖 400+ 模型的统一网关，跨越对话 / 图像 / 视频 / 音频 / 语音 / 代码六大类。预付费 $20 起，统一 credit 计费，AI Playground 沙盒可并排对比模型。提供"单一 endpoint 切换全部模型"的接入方式，面向独立开发者与初创团队。',
     },
   },
   {
@@ -602,8 +602,8 @@ const PROVIDERS = [
         sev: 'low', dim: 'L2.1', duration: '9 min', affectedModels: ['meta/llama-4-maverick'] },
     ],
     desc: {
-      en: 'Direct inference provider for open-weight models. High throughput, low latency, and listed pricing that matches what we observe at the wire — no hidden markup. Currently supports the Llama, DeepSeek and Mistral families.',
-      zh: '直接面向开源模型的推理服务商。高吞吐、低延迟，标价与观测计费完全一致，无隐藏溢价。当前覆盖 Llama / DeepSeek / Mistral 三个系列。',
+      en: 'Full-stack AI inference platform — serverless inference, batch processing, and dedicated model deployment for open-source models. Claims 2× inference speedup and ~60% lower cost via proprietary kernels like FlashAttention. Customers include Cursor, Decagon and Salesforce.',
+      zh: '面向开源模型的全栈推理平台 —— Serverless 推理、批处理、独占部署三档可选。基于自研 kernel（如 FlashAttention）实现 2× 推理加速与约 60% 成本降低。客户包括 Cursor、Decagon、Salesforce 等。',
     },
   },
   {
@@ -626,8 +626,8 @@ const PROVIDERS = [
     trustParts: { modelConsistency: 88, providerMatch: 89, fallbackTransparency: 79, pricingIntegrity: 90, safety: 86 },
     incidents: [],
     desc: {
-      en: 'High-speed OSS inference powered by their in-house FireAttention runtime. Currently the fastest provider in this set on Llama and DeepSeek, with observed pricing identical to what is listed.',
-      zh: '基于自研 FireAttention 运行时的高速开源模型推理。在 Llama / DeepSeek 上是当前榜单里最快的中转，观测价与标价完全一致。',
+      en: 'Serverless inference platform for top OSS models (DeepSeek, Llama, Mistral, Qwen, Gemma). Customer cases report 3× throughput gains and latency dropping from 2s to 350ms. Adds fine-tuning with quantization + RL, plus SOC2 / HIPAA / GDPR compliance for enterprise use.',
+      zh: '面向头部开源模型（DeepSeek / Llama / Mistral / Qwen / Gemma）的 Serverless 推理平台。客户案例报告 3× 吞吐提升、延迟从 2s 降至 350ms。提供量化 + RL 的精调能力，并具备 SOC2 / HIPAA / GDPR 合规认证，适合企业生产场景。',
     },
   },
   {
@@ -654,8 +654,8 @@ const PROVIDERS = [
         sev: 'low', dim: 'L2.2', duration: '1.5 hr', affectedModels: ['deepseek/deepseek-v3.2'] },
     ],
     desc: {
-      en: 'Ray-based scalable inference focused on Llama and DeepSeek families. Mid-priced with occasional cold-start tail latency on single-region traffic — a known shape of cost when scaling shared GPUs.',
-      zh: '基于 Ray 的可扩展推理，聚焦 Llama / DeepSeek 系列。中等定价，单 region 流量偶有冷启尾延迟 —— 共享 GPU 扩缩容时的已知问题。',
+      en: 'Production AI platform built on Ray, the open-source distributed compute engine. Targets foundation-model builders running multimodal data curation, distributed training, batch embeddings and LLM post-training across multi-cloud GPU clusters. Customers: Coinbase, Runway, Physical Intelligence.',
+      zh: '基于开源分布式计算引擎 Ray 的生产级 AI 平台。面向基础模型团队，覆盖多模态数据筛选、分布式训练、批量 embedding、LLM 后训练等数据密集型工作负载，支持 AWS / GCP / Azure 多云调度。客户包括 Coinbase、Runway、Physical Intelligence。',
     },
   },
   {
@@ -681,8 +681,8 @@ const PROVIDERS = [
         sev: 'low', dim: 'L2.1', duration: 'single request', affectedModels: ['meta/llama-4-maverick'] },
     ],
     desc: {
-      en: 'Marketplace of community-uploaded model variants. Convenience-first — easy to deploy obscure forks and custom checkpoints — but flagship OSS pricing runs well above direct inference providers.',
-      zh: '社区上传模型变体的市场化平台。强调便利性 —— 部署小众分叉与自定义 checkpoint 很方便 —— 但旗舰开源模型的价格明显高于直接推理服务商。',
+      en: 'Cloud API marketplace for community-contributed ML models — image / audio / video generation, restoration, LLMs and more. Pay-per-second compute (CPU from $0.0001/s up to 8× A100 at $0.0112/s), auto-scales to zero when idle. Suits teams shipping AI features without ML infra expertise.',
+      zh: '社区上传 ML 模型的 API 市场化平台 —— 图像 / 音频 / 视频生成、修复、LLM 等门类齐全。按秒计费（CPU 起价 $0.0001/秒，8× A100 上限 $0.0112/秒），无负载时自动缩到零。适合需要发布 AI 功能但缺乏 ML 基础设施能力的开发团队。',
     },
   },
   {
@@ -711,8 +711,8 @@ const PROVIDERS = [
         sev: 'low', dim: 'L2.1', duration: '12 min', affectedModels: ['openai/gpt-5.5'] },
     ],
     desc: {
-      en: 'Open-source proxy you run yourself. Pricing reflects upstream cost only — true pass-through with zero markup. You own the infrastructure, the gateway just unifies the API surface.',
-      zh: '你自己部署运行的开源代理。价格完全反映上游成本 —— 纯透传、零溢价。基础设施由你掌控，gateway 只负责统一 API 接口。',
+      en: 'Open-source AI gateway providing one unified interface to 100+ LLM providers (OpenAI, Anthropic, Gemini, Bedrock, etc). Available as a Python SDK or self-hosted proxy. Adds OpenAI-compatible formatting, virtual keys, cost tracking, load balancing and guardrails — no markup, you own the infra.',
+      zh: '开源 AI Gateway，将 100+ 上游 LLM（OpenAI、Anthropic、Gemini、Bedrock 等）收敛为单一接口。支持 Python SDK 直接调用 + 自部署 Proxy 两种形态。提供 OpenAI 兼容格式、虚拟 key、成本追踪、负载均衡、护栏等能力，零溢价，基础设施由你掌控。',
     },
   },
 ].map(p => {
@@ -1095,9 +1095,9 @@ function trustHistory(p) {
   for (let i = 0; i < 30; i++) {
     const linear = startVal + (drift * i / 29);
     const noise = (((seed * (i + 7)) % 100) - 50) / 50; // ±1
-    // bai gets a dip & recover story
+    // aimlapi gets a dip & recover story
     let bump = 0;
-    if (p.slug === 'bai' && i >= 6 && i <= 12) bump = -3 + (i - 9);
+    if (p.slug === 'aimlapi' && i >= 6 && i <= 12) bump = -3 + (i - 9);
     spark.push(Math.round(linear + noise + bump));
   }
 
@@ -1851,6 +1851,8 @@ const I18N = {
       sevLow: 'low',
       tagFingerprint: '§03 · Model fingerprint',
       // Top metrics
+      mOverall: 'Overall score',
+      mOverallSub: '/ 100',
       mTtft: 'TTFT (p50)',
       mTtftSub: 'p95 {ms}ms',
       // ScoreSidebar
@@ -2497,6 +2499,8 @@ const I18N = {
       sevLow: '低',
       tagFingerprint: '§03 · 模型指纹',
       // Top metrics
+      mOverall: '综合评分',
+      mOverallSub: '/ 100',
       mTtft: 'TTFT (p50)',
       mTtftSub: 'p95 {ms}ms',
       // ScoreSidebar
@@ -3577,13 +3581,13 @@ function RankingRow({ p, rank, modelId }) {
   );
 }
 
-// Original mini-marks for providers without a corporate logo (B.ai is fictional;
-// LiteLLM is an OSS project). Geometric / typographic marks designed in-house.
+// Original mini-marks for providers without a corporate logo we ship in-house
+// (AIMLAPI here uses an inline typographic mark; LiteLLM is an OSS project).
 const PROVIDER_SVG = {
-  bai: (
+  aimlapi: (
     <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
       <rect width="40" height="40" rx="6" fill="#0EA5E9"/>
-      <text x="20" y="28" textAnchor="middle" fontFamily="Instrument Serif, serif" fontStyle="italic" fontSize="22" fill="#ffffff">B.</text>
+      <text x="20" y="27" textAnchor="middle" fontFamily="Instrument Serif, serif" fontStyle="italic" fontSize="16" fill="#ffffff">AI</text>
     </svg>
   ),
   litellm: (
@@ -4992,18 +4996,20 @@ function PerCallEstimator({ entries }) {
 // (cost / trust / latency / success) plus TTFT as a 5th tile.
 function TopMetrics({ p }) {
   const { t } = useLang();
-  const defaultModel = MODELS.find(m => m.id === p.defaultModelId);
   // TTFT p95 derived deterministically from p.ttft (same formula as PerformanceSection)
   const ttftP95Ms = ((p.ttft * (1.85 + (strHash(p.slug + 'p95ttft') % 25) / 100)) * 1000) | 0;
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-ink-600 mb-12">
-      <Metric
-        label={t('provider.m1MTokInOut')}
-        value={`${fmtUSD(p.costIn)} / ${fmtUSD(p.costOut)}`}
-        sub={defaultModel ? defaultModel.display : ''}
-        tone={p.costDelta < 0 ? 'brand' : p.costDelta > 10 ? 'coral' : 'bone'}
-      />
-      <TrustHistoryCard p={p}/>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-ink-600 mb-12">
+      {/* Overall score tile (replaces the per-model cost tile — cost varies by
+          model, the §01 table below carries that detail). */}
+      <div className="bg-ink p-6">
+        <div className="micro text-smoke mb-3">{t('provider.mOverall')}</div>
+        <div className="flex items-baseline gap-3">
+          <span className="serif text-4xl tracking-editorial text-bone num">{p.overall}</span>
+          <TierChip tier={p.tier}/>
+        </div>
+        <div className="text-[11px] text-ash mt-1 num">{t('provider.mOverallSub')}</div>
+      </div>
       <Metric label={t('provider.mTtft')} value={`${(p.ttft * 1000) | 0}ms`} sub={t('provider.mTtftSub', { ms: ttftP95Ms })}/>
       <Metric label={t('provider.mSuccess')} value={fmtPct(p.success, 1)} sub={t('provider.mSamples', { n: p.samples.toLocaleString() })}/>
     </div>

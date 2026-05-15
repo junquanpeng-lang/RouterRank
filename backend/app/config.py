@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     class Config:
         # 用 ENV_FILE=.env.test 环境变量切换配置文件
-        env_file = os.getenv("ENV_FILE", ".env")
+        env_file = os.getenv("ENV_FILE", "../.env"), ".env"
 
 
 settings = Settings()

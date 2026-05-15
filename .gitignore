@@ -36,3 +36,4 @@ build/
 
 # Legacy single-file demo (kept locally as reference; the Next.js app is now the source of truth)
 index.html
+index-reference.html

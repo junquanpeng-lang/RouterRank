@@ -7,7 +7,7 @@ import { useLang } from "@/lib/contexts/lang";
 import { useToast } from "@/lib/contexts/toast";
 import { useWallet } from "@/lib/contexts/wallet";
 import { BENCHMARK_TEMPLATES, detectBenchmark, getMockResponse, PROVIDER_STYLE } from "@/lib/benchmarks";
-import { MODELS, PROVIDERS } from "@/lib/data";
+import { useData } from "@/lib/contexts/data";
 import { tokenCost } from "@/lib/scoring";
 import { useStreamingText } from "@/lib/use-streaming-text";
 import { copyToClipboard, cx, fmtPct, fmtUSD, strHash, trustLabel, trustTone } from "@/lib/utils";
@@ -40,6 +40,7 @@ export function RunPageBody() {
 
 function RunPageInner() {
   const { t } = useLang();
+  const { providers, models } = useData();
   const toast = useToast();
   const { wallet, setShowConnect } = useWallet();
   const params = useSearchParams();
@@ -79,19 +80,19 @@ function RunPageInner() {
     const inToks = Math.max(40, Math.round(fullPrompt.length / 4));
     const expectedOut = Math.min(maxTokens, 800);
     return selected.reduce((acc, slug) => {
-      const p = PROVIDERS.find((x) => x.slug === slug);
+      const p = providers.find((x) => x.slug === slug);
       if (!p) return acc;
       return acc + tokenCost(p, inToks, expectedOut);
     }, 0);
-  }, [selected, fullPrompt, maxTokens]);
+  }, [selected, fullPrompt, maxTokens, providers]);
 
   const allDone = run && run.providers.every((r) => r.status === "completed" || r.status === "failed");
   const completed = run?.providers.filter((r) => r.status === "completed") ?? [];
 
-  const buildScores = (providers: RunStatusRow[]): RunStatusRow[] =>
-    providers.map((r) => {
+  const buildScores = (rows: RunStatusRow[]): RunStatusRow[] =>
+    rows.map((r) => {
       if (r.status !== "completed") return r;
-      const p = PROVIDERS.find((x) => x.slug === r.slug)!;
+      const p = providers.find((x) => x.slug === r.slug)!;
       return {
         ...r,
         scores: { L1: p.L1, L2: p.L2, L3: p.L3, overall: p.overall, tier: p.tier },
@@ -101,7 +102,7 @@ function RunPageInner() {
   const start = () => {
     if (selected.length < 1 || !prompt) return;
     const id = "run_" + Math.random().toString(36).slice(2, 9);
-    const modelObj = MODELS.find((m) => m.id === model);
+    const modelObj = models.find((m) => m.id === model);
     setRun({
       id,
       prompt: fullPrompt,
@@ -148,7 +149,7 @@ function RunPageInner() {
       const finishDelay = startDelay + 900 + (strHash(r.slug + run.id) % 1500);
       timers.push(
         setTimeout(() => {
-          const provider = PROVIDERS.find((x) => x.slug === r.slug)!;
+          const provider = providers.find((x) => x.slug === r.slug)!;
           const failProb = r.slug === "replicate" ? 0.45 : r.slug === "anyscale" ? 0.08 : 0;
           const fail = (strHash(r.slug + run.id + "f") % 100) / 100 < failProb;
           const inputTokens = Math.max(40, Math.round(fullPrompt.length / 4));
@@ -336,7 +337,7 @@ function RunPageInner() {
           <Section label={t("run.labelModel")}>
             <ModelDropdown value={model} onChange={setModel} />
             <div className="mt-2 micro text-smoke">
-              {t("run.modelSupportCount", { n: PROVIDERS.length })}
+              {t("run.modelSupportCount", { n: providers.length })}
             </div>
           </Section>
 
@@ -347,7 +348,7 @@ function RunPageInner() {
               {selected.length === 1 && <span className="text-ash">{t("run.singleMode")}</span>}
             </div>
             <div className="space-y-1">
-              {PROVIDERS.map((p) => {
+              {providers.map((p) => {
                 const on = selected.includes(p.slug);
                 return (
                   <button
@@ -468,7 +469,7 @@ function RunPageInner() {
                   setShowConnect(true);
                   return;
                 }
-                const p = PROVIDERS.find((x) => x.slug === r.slug)!;
+                const p = providers.find((x) => x.slug === r.slug)!;
                 setPayTarget({ provider: p, cost: r.cost! });
               }}
             />
@@ -568,8 +569,9 @@ function EmptyRun({ mode }: { mode: "single" | "compare" }) {
 
 function SingleProviderResult({ run, onPay }: { run: RunState; onPay: () => void }) {
   const { t } = useLang();
+  const { providers } = useData();
   const r = run.providers[0];
-  const p = PROVIDERS.find((x) => x.slug === r.slug)!;
+  const p = providers.find((x) => x.slug === r.slug)!;
   const responseText = r.status === "completed" ? r.response || "" : "";
   const stream = useStreamingText(responseText, 14);
 
@@ -701,6 +703,7 @@ function RunStatusList({
   onRetry: (slug: string) => void;
 }) {
   const { t } = useLang();
+  const { providers } = useData();
   const allDone = run.providers.every(
     (r) => r.status === "completed" || r.status === "failed",
   );
@@ -745,7 +748,7 @@ function RunStatusList({
       </div>
       <div className="space-y-2">
         {run.providers.map((r) => {
-          const provider = PROVIDERS.find((p) => p.slug === r.slug)!;
+          const provider = providers.find((p) => p.slug === r.slug)!;
           const ic =
             r.status === "pending" ? (
               <span className="text-smoke">○</span>
@@ -812,24 +815,25 @@ function RunStatusList({
 
 function SummaryCards({ run }: { run: RunState }) {
   const { t } = useLang();
+  const { providers } = useData();
   const completed = run.providers.filter((r) => r.status === "completed" && r.scores);
   if (!completed.length) return null;
 
   const cheapest = [...completed].sort((a, b) => (a.cost! - b.cost!))[0];
   const fastest = [...completed].sort((a, b) => (a.latency! - b.latency!))[0];
   const trusted = [...completed].sort((a, b) => {
-    const tA = PROVIDERS.find((p) => p.slug === a.slug)!.trust;
-    const tB = PROVIDERS.find((p) => p.slug === b.slug)!.trust;
+    const tA = providers.find((p) => p.slug === a.slug)!.trust;
+    const tB = providers.find((p) => p.slug === b.slug)!.trust;
     return tB - tA;
   })[0];
   const recommended = [...completed].sort(
     (a, b) => (b.scores!.overall - a.scores!.overall),
   )[0];
 
-  const recProvider = PROVIDERS.find((p) => p.slug === recommended.slug)!;
-  const cheapProvider = PROVIDERS.find((p) => p.slug === cheapest.slug)!;
-  const fastProvider = PROVIDERS.find((p) => p.slug === fastest.slug)!;
-  const trustProvider = PROVIDERS.find((p) => p.slug === trusted.slug)!;
+  const recProvider = providers.find((p) => p.slug === recommended.slug)!;
+  const cheapProvider = providers.find((p) => p.slug === cheapest.slug)!;
+  const fastProvider = providers.find((p) => p.slug === fastest.slug)!;
+  const trustProvider = providers.find((p) => p.slug === trusted.slug)!;
 
   const avgCost = completed.reduce((s, c) => s + c.cost!, 0) / completed.length;
   const cheapPct = Math.round((avgCost / cheapest.cost! - 1) * 100);
@@ -917,6 +921,7 @@ function SumCard({
 
 function ResponseGrid({ run }: { run: RunState }) {
   const { t } = useLang();
+  const { providers } = useData();
   const visible = run.providers.filter(
     (r) => r.status === "completed" || r.status === "failed",
   );
@@ -939,7 +944,7 @@ function ResponseGrid({ run }: { run: RunState }) {
       <div className="micro text-smoke mb-3">{t("run.sideBySide")}</div>
       <div className={cx("grid grid-cols-1 gap-px bg-ink-600", colCls)}>
         {visible.map((r) => {
-          const p = PROVIDERS.find((x) => x.slug === r.slug)!;
+          const p = providers.find((x) => x.slug === r.slug)!;
           const isExpanded = !!expanded[r.slug];
           return (
             <div key={r.slug} className="bg-ink p-5 flex flex-col">
@@ -1047,10 +1052,11 @@ function ResponseGrid({ run }: { run: RunState }) {
 
 function EvaluationTable({ run }: { run: RunState }) {
   const { t } = useLang();
+  const { providers } = useData();
   const completed = run.providers.filter((r) => r.status === "completed" && r.scores);
   if (!completed.length) return null;
   const rows = [...completed]
-    .map((r) => ({ ...r, p: PROVIDERS.find((x) => x.slug === r.slug)! }))
+    .map((r) => ({ ...r, p: providers.find((x) => x.slug === r.slug)! }))
     .sort((a, b) => b.scores!.overall - a.scores!.overall);
   const winner = rows[0];
 
@@ -1136,6 +1142,7 @@ function ScoreCell({ value, bold = false }: { value: number; bold?: boolean }) {
 
 function RecommendedAction({ run }: { run: RunState }) {
   const { t } = useLang();
+  const { providers } = useData();
   const { wallet, setShowConnect } = useWallet();
   const [payTarget, setPayTarget] = useState<{ provider: Provider; cost: number } | null>(null);
   const completed = run.providers.filter((r) => r.status === "completed" && r.scores);
@@ -1146,14 +1153,14 @@ function RecommendedAction({ run }: { run: RunState }) {
   )[0];
   const cheapest = [...completed].sort((a, b) => a.cost! - b.cost!)[0];
   const trusted = [...completed].sort((a, b) => {
-    const tA = PROVIDERS.find((p) => p.slug === a.slug)!.trust;
-    const tB = PROVIDERS.find((p) => p.slug === b.slug)!.trust;
+    const tA = providers.find((p) => p.slug === a.slug)!.trust;
+    const tB = providers.find((p) => p.slug === b.slug)!.trust;
     return tB - tA;
   })[0];
 
-  const recP = PROVIDERS.find((p) => p.slug === recommended.slug)!;
-  const cheapP = PROVIDERS.find((p) => p.slug === cheapest.slug)!;
-  const trustP = PROVIDERS.find((p) => p.slug === trusted.slug)!;
+  const recP = providers.find((p) => p.slug === recommended.slug)!;
+  const cheapP = providers.find((p) => p.slug === cheapest.slug)!;
+  const trustP = providers.find((p) => p.slug === trusted.slug)!;
 
   const pay = (provider: Provider, cost: number) => {
     if (!wallet) setShowConnect(true);
@@ -1231,6 +1238,7 @@ function RecentRuns({
   onReuse: (h: HistoryEntry) => void;
 }) {
   const { t } = useLang();
+  const { providers } = useData();
   const toast = useToast();
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-12">
@@ -1279,7 +1287,7 @@ function RecentRuns({
                   <div className="text-[13px] text-bone">
                     {isCompare
                       ? t("run.providersCount", { n: h.providers.length })
-                      : PROVIDERS.find((p) => p.slug === h.providers[0].slug)?.name}
+                      : providers.find((p) => p.slug === h.providers[0].slug)?.name}
                   </div>
                   <div className="micro text-smoke">
                     {isCompare ? t("run.modeCompare") : t("run.modeSingleShort")} ·{" "}

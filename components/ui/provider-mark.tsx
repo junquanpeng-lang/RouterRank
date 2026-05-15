@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PROVIDERS } from "@/lib/data";
+import { useData } from "@/lib/contexts/data";
 
 const PROVIDER_SVG: Record<string, React.ReactNode> = {
   bai: (
@@ -20,12 +20,20 @@ const PROVIDER_SVG: Record<string, React.ReactNode> = {
       </text>
     </svg>
   ),
-  litellm: (
+  edenai: (
     <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-      <rect width="40" height="40" rx="6" fill="#0a0a0b" />
-      <path d="M10 14 L20 9 L30 14 L20 19 Z" fill="#84cc16" opacity="0.9" />
-      <path d="M10 22 L20 17 L30 22 L20 27 Z" fill="#84cc16" opacity="0.55" />
-      <path d="M10 30 L20 25 L30 30 L20 35 Z" fill="#84cc16" opacity="0.3" />
+      <rect width="40" height="40" rx="6" fill="#6366f1" />
+      <text
+        x="20"
+        y="26"
+        textAnchor="middle"
+        fontFamily="system-ui, sans-serif"
+        fontWeight="700"
+        fontSize="12"
+        fill="#ffffff"
+      >
+        EDEN
+      </text>
     </svg>
   ),
 };
@@ -42,10 +50,11 @@ function ProviderFallback({ text, size }: { text: string; size: number }) {
 }
 
 export function ProviderMark({ slug, size = 36 }: { slug: string; size?: number }) {
-  const p = PROVIDERS.find((x) => x.slug === slug);
+  const { providers } = useData();
+  const p = providers.find((x) => x.slug === slug);
   const [failed, setFailed] = useState(false);
 
-  if (!p) return <ProviderFallback text="?" size={size} />;
+  if (!p) return <ProviderFallback text={slug[0]?.toUpperCase() ?? "?"} size={size} />;
 
   if (p.domain && !failed) {
     return (

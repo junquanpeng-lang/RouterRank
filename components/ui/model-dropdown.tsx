@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MODELS } from "@/lib/data";
+import { useData } from "@/lib/contexts/data";
 import { cx } from "@/lib/utils";
 
 interface Props {
@@ -17,6 +17,7 @@ export function ModelDropdown({
   disabled = false,
   showOwner = true,
 }: Props) {
+  const { models } = useData();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -29,7 +30,8 @@ export function ModelDropdown({
   useEffect(() => {
     if (disabled) setOpen(false);
   }, [disabled]);
-  const current = MODELS.find((m) => m.id === value) || MODELS[0];
+  const current = models.find((m) => m.id === value) ?? models[0];
+  if (!current) return null;
   return (
     <div className="relative" ref={ref}>
       <button
@@ -65,7 +67,7 @@ export function ModelDropdown({
       </button>
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1 card z-30 py-1 max-h-72 overflow-y-auto">
-          {MODELS.map((m) => (
+          {models.map((m) => (
             <button
               key={m.id}
               onClick={() => {

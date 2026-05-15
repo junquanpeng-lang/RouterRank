@@ -51,10 +51,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [theme]);
 
-  const toggle = useCallback(
-    () => setTheme((t) => (t === "dark" ? "light" : "dark")),
-    [],
-  );
+  const toggle = useCallback(() => {
+    document.documentElement.classList.add("theme-switching");
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove("theme-switching");
+      });
+    });
+  }, []);
 
   const value = useMemo(
     () => ({ theme, setTheme, toggle }),

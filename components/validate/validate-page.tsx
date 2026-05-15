@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLang } from "@/lib/contexts/lang";
-import { MODELS, PROVIDERS } from "@/lib/data";
+import { useData } from "@/lib/contexts/data";
 import { fingerprint, inferProvider, syntheticFingerprint } from "@/lib/fingerprint";
 import { strHash, cx } from "@/lib/utils";
 import { I } from "@/components/ui/icons";
@@ -41,6 +41,7 @@ interface Report {
 
 export function ValidatePageBody() {
   const { t } = useLang();
+  const { providers, models } = useData();
   const [url, setUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
@@ -95,7 +96,7 @@ export function ValidatePageBody() {
         const fp = slug ? fingerprint(slug, model) : syntheticFingerprint(url, model);
         let provider: Report["provider"];
         if (slug) {
-          const p = PROVIDERS.find((x) => x.slug === slug)!;
+          const p = providers.find((x) => x.slug === slug)!;
           provider = { name: p.name, type: p.type, region: p.region };
         } else {
           let host = "";
@@ -118,7 +119,7 @@ export function ValidatePageBody() {
     setPhaseStatus({});
   };
 
-  const m = MODELS.find((x) => x.id === model);
+  const m = models.find((x) => x.id === model);
   if (!m) return null;
 
   return (
@@ -245,7 +246,7 @@ export function ValidatePageBody() {
               disabled={phase === "running"}
               className="w-full bg-ink-800 border border-ink-500 px-3 py-2.5 text-[13px] text-bone min-w-[200px]"
             >
-              {MODELS.map((mm) => (
+              {models.map((mm) => (
                 <option key={mm.id} value={mm.id}>
                   {mm.display}
                 </option>

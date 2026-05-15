@@ -26,6 +26,26 @@ export interface Incident {
   time: string;
   issue: string;
   sev: Severity;
+  dim?: string;
+  duration?: string;
+  affectedModels?: string[];
+}
+
+export interface ModelPricingEntry {
+  listedIn: number;
+  listedOut: number;
+  observedIn: number;
+  observedOut: number;
+}
+
+export interface ModelEvalSummary {
+  totalScore: number;
+  rating: Tier;
+  successRate: number;
+  ttftP50Ms: number;
+  ttftP95Ms: number;
+  e2eP50Ms: number;
+  e2eP95Ms: number;
 }
 
 export interface ProviderRaw {
@@ -34,39 +54,48 @@ export interface ProviderRaw {
   type: ProviderType;
   domain: string | null;
   website: string | null;
-  crypto: boolean;
-  walletPay: boolean;
   region: string;
-  costIn: number;
-  costOut: number;
-  costDelta: number;
-  ref: number;
   latency: number;
   p95: number;
   ttft: number;
+  ttftP95: number;
   success: number;
   samples: number;
   overall: number;
-  volume7d: number;
+  modelPricing: Record<string, ModelPricingEntry>;
   scores: SubScores;
   spark: number[];
   trustParts: TrustParts;
   incidents: Incident[];
-  desc: string;
+  desc: string | { en: string; zh: string };
+  // Legacy optional fields (kept for backward compat with sub-components)
+  crypto?: boolean;
+  walletPay?: boolean;
+  ref?: number;
+  volume7d?: number;
+  costIn?: number;
+  costOut?: number;
+  costDelta?: number;
 }
 
 export interface Provider extends ProviderRaw {
+  costIn: number;
+  costOut: number;
   cost: number;
+  costDelta: number;
+  defaultModelId: string;
   trust: number;
   L1: number;
   L2: number;
   L3: number;
   tier: Tier;
+  modelEvals: Record<string, ModelEvalSummary>;
 }
 
 export interface ModelDef {
   id: string;
   display: string;
+  family: string;
   owner: string;
   ctx: number;
   officialIn: number;
